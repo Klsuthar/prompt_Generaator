@@ -303,7 +303,7 @@ function renderDashboard() {
           <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Charts Generated</span>
           <div class="flex items-baseline gap-2 mt-1">
             <span class="text-2xl font-bold text-slate-900 dark:text-white">${copiedCharts}</span>
-            <span class="text-sm text-slate-400">/ {totalCharts}</span>
+            <span class="text-sm text-slate-400">/ ${totalCharts}</span>
           </div>
           <div class="w-full h-1.5 mt-3 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: ${totalCharts > 0 ? (copiedCharts / totalCharts) * 100 : 0}%"></div>
@@ -828,7 +828,7 @@ function renderPromptPanel() {
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' 
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
               }"
-              title="Copy JSON Prompt"
+              title="Copy Image Prompt"
             >
               <i data-lucide="${isCopied ? 'check' : 'copy'}" class="w-4 h-4 ${isCopied ? 'text-emerald-500' : ''}"></i>
             </button>
@@ -836,6 +836,18 @@ function renderPromptPanel() {
           <pre class="font-mono text-xs overflow-y-auto whitespace-pre leading-relaxed select-text pr-10 flex-1 scrollbar-thin">
             <code>${highlightedHtml}</code>
           </pre>
+        </div>
+
+        <!-- Copy Buttons Row -->
+        <div class="flex flex-wrap gap-2 flex-shrink-0">
+          <button id="panel-copy-negative-btn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-200 shadow-sm">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy Negative Prompt</span>
+          </button>
+          <button id="panel-copy-all-btn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all duration-200 shadow-sm">
+            <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
+            <span>Copy All</span>
+          </button>
         </div>
         <p class="text-[10px] text-slate-400 italic flex items-center gap-1.5 px-1.5 flex-shrink-0">
           <span>💡 Keyboard Shortcuts: Press <strong class="font-semibold text-indigo-500">C</strong> to Copy, <strong className="font-semibold text-indigo-500">Esc</strong> to Close.</span>
@@ -892,9 +904,21 @@ function renderPromptPanel() {
       });
   };
 
-  // Top Copy Prompt
+  // Top Copy Prompt (copies only image_generation_prompt text)
   const copyPromptBtnTop = document.getElementById('panel-copy-prompt-btn-top');
   copyPromptBtnTop.onclick = copyCurrentPrompt;
+
+  // Copy Negative Prompt
+  const copyNegativeBtn = document.getElementById('panel-copy-negative-btn');
+  if (copyNegativeBtn) {
+    copyNegativeBtn.onclick = () => copyNegativePrompt(currentPromptObj, copyNegativeBtn);
+  }
+
+  // Copy All (image + negative)
+  const copyAllBtn = document.getElementById('panel-copy-all-btn');
+  if (copyAllBtn) {
+    copyAllBtn.onclick = () => copyAllPrompts(currentPromptObj, copyAllBtn);
+  }
 
   // Reset checkmark
   const resetCheckmarkBtn = document.getElementById('panel-reset-checkmark-btn');
@@ -914,21 +938,51 @@ function renderPromptPanel() {
 // --- Copy prompt implementation ---
 function copyCurrentPrompt() {
   const currentPromptObj = generatePrompt(selectedTopic, activePromptType, selectedAssetIndex);
-  const simplifiedPromptObj = {
-    image_generation_prompt: currentPromptObj.image_generation_prompt,
-    negative_prompt: currentPromptObj.negative_prompt
-  };
-  const jsonStr = JSON.stringify(simplifiedPromptObj, null, 2);
+  const promptText = currentPromptObj.image_generation_prompt;
   
-  navigator.clipboard.writeText(jsonStr)
+  navigator.clipboard.writeText(promptText)
     .then(() => {
       setCopiedStatus(selectedTopic.id, activePromptType, selectedAssetIndex, true);
-      showToast(`Copied ${activePromptType.toUpperCase()} #${selectedAssetIndex + 1} prompt to clipboard! 📋✅`);
+      showToast(`Copied ${activePromptType.toUpperCase()} #${selectedAssetIndex + 1} image prompt to clipboard! 📋✅`);
       renderPromptPanel();
       renderDashboard();
       renderTopicGrid();
     })
     .catch(err => console.error('Failed to copy prompt:', err));
+}
+
+function copyNegativePrompt(promptObj, btnEl) {
+  const negativeText = promptObj.negative_prompt;
+  navigator.clipboard.writeText(negativeText)
+    .then(() => {
+      showToast('Copied negative prompt to clipboard! 📋');
+      btnEl.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
+      lucide.createIcons();
+      setTimeout(() => {
+        btnEl.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Negative Prompt</span>';
+        lucide.createIcons();
+      }, 1500);
+    })
+    .catch(err => console.error('Failed to copy negative prompt:', err));
+}
+
+function copyAllPrompts(promptObj, btnEl) {
+  const allText = `IMAGE PROMPT:\n${promptObj.image_generation_prompt}\n\nNEGATIVE PROMPT:\n${promptObj.negative_prompt}`;
+  navigator.clipboard.writeText(allText)
+    .then(() => {
+      setCopiedStatus(selectedTopic.id, activePromptType, selectedAssetIndex, true);
+      showToast('Copied all prompts to clipboard! 📋✅');
+      btnEl.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
+      lucide.createIcons();
+      setTimeout(() => {
+        btnEl.innerHTML = '<i data-lucide="copy-plus" class="w-3.5 h-3.5"></i><span>Copy All</span>';
+        lucide.createIcons();
+      }, 1500);
+      renderPromptPanel();
+      renderDashboard();
+      renderTopicGrid();
+    })
+    .catch(err => console.error('Failed to copy all prompts:', err));
 }
 
 // --- Toast alert notifications ---

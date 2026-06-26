@@ -47,12 +47,24 @@ export function getClassLevel(classesStr) {
   return 1; // Fallback to Class 1
 }
 
+export function getColorPalette(subject) {
+  const s = (subject || '').toLowerCase().trim();
+  if (s.includes('math'))   return 'royal blue (#3B82F6) primary, soft teal accents, warm amber highlights';
+  if (s.includes('english')) return 'rich violet (#8B5CF6) primary, lavender accents, cream highlights';
+  if (s.includes('evs'))    return 'fresh emerald (#10B981) primary, leaf green, sky blue accents';
+  if (s.includes('science')) return 'deep teal (#14B8A6) primary, electric blue, golden yellow accents';
+  if (s.includes('hindi'))  return 'warm amber (#F59E0B) primary, deep orange, maroon accents';
+  if (s.includes('drawing') || s.includes('art')) return 'vibrant pink (#EC4899) primary, coral, soft peach accents';
+  // Sensible default for any other subject
+  return 'bright blue (#3B82F6) primary, soft grey accents, warm amber highlights';
+}
+
 export function getStyleForClass(level) {
-  if (level <= 0) return 'cute flat cartoon illustration';
-  if (level <= 2) return 'semi-cartoon clean illustration';
-  if (level <= 4) return 'clean illustrated academic';
-  if (level <= 6) return 'semi-realistic flat academic illustration';
-  return 'clean academic diagram style';
+  if (level <= 0) return 'adorable kawaii-style flat vector illustration with rounded shapes and cheerful expressions — suitable for toddlers';
+  if (level <= 2) return 'bright, friendly semi-cartoon clean vector illustration with bold outlines and soft shadows — age 5-7 appropriate';
+  if (level <= 4) return 'clean, polished illustrated academic infographic style with labeled diagrams and clear hierarchy';
+  if (level <= 6) return 'semi-realistic flat academic illustration with structured diagrams and data visualization';
+  return 'clean professional academic diagram style with precise technical illustrations';
 }
 
 export function getContentItems(topic) {
@@ -78,20 +90,20 @@ export function getContentItems(topic) {
 export function getLayout(topic, assetType, level) {
   if (assetType === 'chart') {
     if (level <= 0) {
-      return '2x3 grid of large visual cards with titles underneath';
+      return '2x3 grid of large rounded visual cards, each card showing a single concept with a large colorful illustration and a bold label underneath in large rounded sans-serif font';
     }
     if (level <= 4) {
-      return '3x2 or 4x2 structured grid card layout';
+      return '3x2 or 4x2 neatly structured grid, each cell containing a titled mini-card with illustration, label, and key fact — separated by thin subtle lines';
     }
-    return 'detailed central diagram with labeled pointers';
+    return 'central detailed diagram with labeled arrows and pointers, supplementary info boxes in corners, clean header title bar at top';
   } else {
     if (level <= 0) {
-      return 'matching columns, circle-the-correct-image blocks, and large drawing spaces';
+      return 'large visual matching columns with dotted connector lines, circle-the-correct-image sections with 4 options per row, and oversized tracing/drawing boxes with grey guide outlines';
     }
     if (level <= 4) {
-      return 'fill-in-the-blanks with visual boxes, short answer lines, and simple match grids';
+      return 'numbered fill-in-the-blank questions with visual hint boxes, short answer lines (___), match-the-column with connecting arrows, and a simple word/number grid';
     }
-    return 'multiple choice checkboxes, diagram labeling, and step-by-step boxed workspaces';
+    return 'multiple-choice questions with checkbox circles (A/B/C/D), diagram labeling with blank leader lines, step-by-step worked example boxes, and a data table with empty cells to fill';
   }
 }
 
@@ -116,6 +128,7 @@ export function generatePrompt(topic, assetType, index = 0) {
   const focusItem = contentItems[index % contentItems.length];
   
   const layout = getLayout(topic, assetType, classLevel);
+  const colorPalette = getColorPalette(topic.subject);
   
   const isMultiple = totalOfType > 1;
   const assetTitle = focusItem.toLowerCase() === topic.topic_name.toLowerCase()
@@ -124,12 +137,12 @@ export function generatePrompt(topic, assetType, index = 0) {
 
   let imagePrompt = '';
   if (assetType === 'chart') {
-    imagePrompt = `An educational wall chart for children titled '${assetTitle}', designed for ${assignedClass} level (reference only — DO NOT write '${assignedClass}', grade label, or class text anywhere on the image itself). Strict edge-to-edge layout: zero margin and zero padding, where illustrations and text extend almost to the canvas boundaries. Pure white background (#FFFFFF) with absolutely no borders, outlines, or frames. Clear and legible ${style} elements illustrating and labeling "${focusItem}". Harmonious color palette. No watermarks.`;
+    imagePrompt = `Create a high-quality educational wall chart titled '${assetTitle}'. Target audience: ${assignedClass} students (DO NOT print class name on the image). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content focus: clearly illustrate and label '${focusItem}' with accurate educational detail. Typography: use clean bold sans-serif headings and legible body text. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   } else {
-    imagePrompt = `A print-ready student worksheet titled '${assetTitle}', designed for ${assignedClass} level (reference only — DO NOT write '${assignedClass}', grade label, or class text anywhere on the worksheet itself). Strict edge-to-edge layout: zero margin and zero padding, where questions and writing sections extend almost to the canvas boundaries. Pure white background (#FFFFFF) with absolutely no borders, outlines, or frames. Simple ${style} exercises: ${layout}, focusing on "${focusItem}". Ample blank spaces, lines, and boxes for writing answers, with clear simple instructions.`;
+    imagePrompt = `Create a print-ready educational worksheet titled '${assetTitle}'. Target audience: ${assignedClass} students (DO NOT print class name on the worksheet). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content focus: exercise questions about '${focusItem}' with age-appropriate difficulty. Include numbered questions, clear instructions text at the top of each section, and generous blank answer spaces (lines, boxes, circles). Typography: clean sans-serif for instructions, mono-spaced or handwriting-style blanks for answers. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   }
 
-  const negativePrompt = "borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text";
+  const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified';
   const filename = getAssetFilename(topic, assetType, index, totalOfType, assignedClass);
 
   return {
