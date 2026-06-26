@@ -621,7 +621,7 @@ function renderTopicGrid() {
             ${topic.priority}
           </span>
         </div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-white leading-snug mb-2">${topic.topic_name}</h3>
+        <h3 class="text-base font-bold text-slate-800 dark:text-white leading-snug mb-2">#${topic.id} ${topic.topic_name}</h3>
         <p class="text-xs text-slate-400 mb-3 flex items-center gap-1.5">
           <i data-lucide="layers" class="w-3.5 h-3.5 flex-shrink-0"></i>
           <span class="font-semibold text-slate-600 dark:text-slate-300 truncate">Classes: ${topic.classes}</span>
@@ -766,7 +766,7 @@ function renderPromptPanel() {
               </span>
             </div>
             <h2 class="text-lg font-bold text-slate-950 dark:text-white leading-tight">
-              ${selectedTopic.topic_name}
+              #${selectedTopic.id} ${selectedTopic.topic_name}
             </h2>
           </div>
           <button id="panel-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors">

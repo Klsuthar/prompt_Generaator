@@ -139,10 +139,11 @@ export function buildMainPrompt(topic, assetType, style, focusItem, layout, assi
     ? (isMultiple ? `${topic.topic_name} (Part ${index + 1})` : topic.topic_name)
     : `${topic.topic_name}: ${focusItem}`;
 
-  const baseRules = `Universal Prompt Constraints:
+  const baseRules = `Universal Prompt Constraints (DALL-E 3 / ChatGPT Optimized):
 - Pure white background (#FFFFFF). No textures, no patterns, no gradients in background.
-- NO border, NO frame, NO outer decorative edge around the chart/sheet.
-- Heading '${assetTitle}' placed at the top with minimal gap — no excessive white space above the title.
+- ABSOLUTELY NO border, NO outer frame, NO outline, NO decorative boundary lines. Keep it simple and clean.
+- ZERO margins, ZERO padding. Strict edge-to-edge layout where the design, text, and illustrations extend almost to the absolute outer edges of the canvas.
+- Heading '${assetTitle}' placed at the top with minimal gap — no excessive empty space above the title.
 - Heading is bold, clean, simple sans-serif — well-designed but NOT overly stylized or decorative.
 - Class level is for reference only — DO NOT show class name, grade, or subject name anywhere on the image.
 - A4 Portrait format (3:4 ratio). Print-ready at 300dpi.
