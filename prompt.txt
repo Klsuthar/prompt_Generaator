@@ -1,0 +1,30 @@
+# VidyaFrame — AI Image Prompt Generator Website
+## Complete Build Prompt for AI Coding Agent (Cursor / Windsurf / Bolt)
+
+---
+
+## PROJECT OVERVIEW
+
+Build a complete responsive web application called **VidyaFrame Prompt Studio**.
+
+This tool helps educators generate detailed AI image generation prompts
+for educational charts and worksheets. Data comes from an Excel/CSV file
+(attached separately) containing 162 topics across Mathematics, English,
+EVS, Science, Hindi, and Drawing subjects — for Nursery to Class 8.
+
+---
+
+## TECH STACK
+
+- **Frontend**: React + Vite
+- **Styling**: Tailwind CSS
+- **Data**: JSON (converted from Excel CSV at startup)
+- **State**: React useState + useReducer
+- **Storage**: localStorage (to persist copy/tick status)
+- **No backend required** — fully client-side
+
+---
+
+## DATA STRUCTURE
+
+Each topic row from Excel has these fields:
