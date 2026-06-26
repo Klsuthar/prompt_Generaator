@@ -720,7 +720,11 @@ function renderPromptPanel() {
   const assetsCount = activePromptType === 'chart' ? (selectedTopic.charts_count || 0) : (selectedTopic.worksheets_count || 0);
 
   const currentPromptObj = generatePrompt(selectedTopic, activePromptType, selectedAssetIndex);
-  const highlightedHtml = syntaxHighlightJson(currentPromptObj);
+  const simplifiedPromptObj = {
+    image_generation_prompt: currentPromptObj.image_generation_prompt,
+    negative_prompt: currentPromptObj.negative_prompt
+  };
+  const highlightedHtml = syntaxHighlightJson(simplifiedPromptObj);
   const isCopied = getCopiedStatus(selectedTopic.id, activePromptType, selectedAssetIndex);
 
   const color = SUBJECT_COLORS[selectedTopic.subject] || { bg: 'bg-slate-500/10', text: 'text-slate-500 border-slate-500/20' };
@@ -910,7 +914,11 @@ function renderPromptPanel() {
 // --- Copy prompt implementation ---
 function copyCurrentPrompt() {
   const currentPromptObj = generatePrompt(selectedTopic, activePromptType, selectedAssetIndex);
-  const jsonStr = JSON.stringify(currentPromptObj, null, 2);
+  const simplifiedPromptObj = {
+    image_generation_prompt: currentPromptObj.image_generation_prompt,
+    negative_prompt: currentPromptObj.negative_prompt
+  };
+  const jsonStr = JSON.stringify(simplifiedPromptObj, null, 2);
   
   navigator.clipboard.writeText(jsonStr)
     .then(() => {
