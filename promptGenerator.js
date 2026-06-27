@@ -107,13 +107,37 @@ export function getLayout(topic, assetType, level) {
   }
 }
 
-export function getAssetFilename(topic, assetType, index, totalOfType, assignedClass) {
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\/_]+/g, '-')      // Replace spaces, slashes, underscores with -
+    .replace(/[^\w\-]+/g, '')       // Remove all other non-word chars
+    .replace(/\-\-+/g, '-');        // Replace multiple hyphens with single -
+}
+
+export function getAssetFilename(topic, assetType, index, totalOfType, assignedClass, focusItem) {
   const cleanClass = assignedClass.toLowerCase().replace(/\s+/g, '-');
   const cleanSubject = topic.subject.toLowerCase().replace(/\s+/g, '-');
   const cleanTopic = topic.seo_slug.toLowerCase();
+  
+  const focusSlug = slugify(focusItem || '');
+  
+  let combinedTopic = cleanTopic;
+  if (focusSlug && focusSlug !== cleanTopic) {
+    if (focusSlug.includes(cleanTopic)) {
+      combinedTopic = focusSlug;
+    } else if (cleanTopic.includes(focusSlug)) {
+      combinedTopic = cleanTopic;
+    } else {
+      combinedTopic = `${cleanTopic}-${focusSlug}`;
+    }
+  }
+
   const cleanType = assetType.toLowerCase();
   const suffix = totalOfType > 1 ? `-${index + 1}` : '';
-  return `${cleanClass}-${cleanSubject}-${cleanTopic}-${cleanType}${suffix}`;
+  return `${cleanClass}-${cleanSubject}-${combinedTopic}-${cleanType}${suffix}`;
 }
 
 export function generatePrompt(topic, assetType, index = 0) {
@@ -143,7 +167,7 @@ export function generatePrompt(topic, assetType, index = 0) {
   }
 
   const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified';
-  const filename = getAssetFilename(topic, assetType, index, totalOfType, assignedClass);
+  const filename = getAssetFilename(topic, assetType, index, totalOfType, assignedClass, focusItem);
 
   return {
     filename: filename,

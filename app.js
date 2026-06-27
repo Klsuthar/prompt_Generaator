@@ -703,6 +703,9 @@ function openPromptPanel(topic, type) {
   panelNode.classList.remove('translate-x-full');
   panelNode.classList.add('translate-x-0');
   
+  // Prevent background scrolling
+  document.body.classList.add('overflow-hidden');
+  
   renderPromptPanel();
 }
 
@@ -710,11 +713,18 @@ function closePromptPanel() {
   selectedTopic = null;
   panelNode.classList.remove('translate-x-0');
   panelNode.classList.add('translate-x-full');
+  
+  // Re-enable background scrolling
+  document.body.classList.remove('overflow-hidden');
 }
 
 // --- Render Prompt Panel ---
 function renderPromptPanel() {
   if (!selectedTopic) return;
+
+  // Save horizontal scroll position of the sub-tabs container
+  const oldContainer = document.getElementById('panel-sub-tabs-container');
+  const scrollPos = oldContainer ? oldContainer.scrollLeft : 0;
 
   const classesList = getIndividualClasses(selectedTopic.classes);
   const assetsCount = activePromptType === 'chart' ? (selectedTopic.charts_count || 0) : (selectedTopic.worksheets_count || 0);
@@ -796,7 +806,7 @@ function renderPromptPanel() {
         </div>
 
         <!-- Scrollable Sub-tabs -->
-        <div class="mt-4 flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
+        <div id="panel-sub-tabs-container" class="mt-4 flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
           ${subTabsHtml}
         </div>
       </div>
@@ -933,6 +943,12 @@ function renderPromptPanel() {
   }
 
   lucide.createIcons();
+
+  // Restore horizontal scroll position
+  const newContainer = document.getElementById('panel-sub-tabs-container');
+  if (newContainer) {
+    newContainer.scrollLeft = scrollPos;
+  }
 }
 
 // --- Copy prompt implementation ---
