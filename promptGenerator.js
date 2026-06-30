@@ -96,15 +96,76 @@ export function getLayout(topic, assetType, level) {
       return '3x2 or 4x2 neatly structured grid, each cell containing a titled mini-card with illustration, label, and key fact — separated by thin subtle lines';
     }
     return 'central detailed diagram with labeled arrows and pointers, supplementary info boxes in corners, clean header title bar at top';
-  } else {
-    if (level <= 0) {
-      return 'large visual matching columns with dotted connector lines, circle-the-correct-image sections with 4 options per row, and oversized tracing/drawing boxes with grey guide outlines';
-    }
-    if (level <= 4) {
-      return 'numbered fill-in-the-blank questions with visual hint boxes, short answer lines (___), match-the-column with connecting arrows, and a simple word/number grid';
-    }
-    return 'multiple-choice questions with checkbox circles (A/B/C/D), diagram labeling with blank leader lines, step-by-step worked example boxes, and a data table with empty cells to fill';
   }
+  // For worksheets, layout is handled by getWorksheetSections()
+  return '';
+}
+
+// --- Worksheet Section Pools by Class Level ---
+// Each pool contains distinct question/activity formats.
+// We pick 4-5 sections per worksheet and rotate by index to keep each worksheet unique.
+
+const WORKSHEET_SECTIONS_PRESCHOOL = [
+  'Trace and color: large dotted outlines of objects related to the topic for tracing practice',
+  'Circle the correct one: show 4 images per row, child circles the one that matches the instruction',
+  'Match the columns: two columns of images connected by drawing lines between matching pairs',
+  'Count and write: show groups of objects, child writes the number in a large box below',
+  'Color by instruction: outline drawings with simple written color instructions (e.g., "Color the big one red")',
+  'Spot the difference: two nearly identical illustrations side by side, child circles differences',
+  'Draw and complete: partially drawn images that the child completes (e.g., draw the missing half)',
+  'Tick (✓) or Cross (✗): simple yes/no visual questions where child marks correct or incorrect',
+  'Sort and group: mixed objects that child cuts or circles to group into 2-3 categories',
+  'Sequence order: 3-4 jumbled picture cards that child numbers in correct order'
+];
+
+const WORKSHEET_SECTIONS_PRIMARY = [
+  'Fill in the blanks: sentences with missing words/numbers, with a word bank provided at the top',
+  'Match the columns: Column A and Column B with items to connect using lines or arrows',
+  'True or False: 5-6 statements where student writes T or F in the box next to each',
+  'Short answer questions: 3-4 questions with 2-line answer spaces below each',
+  'Label the diagram: a clear illustration with blank leader lines pointing to key parts to label',
+  'Word problem / Story problem: 2-3 age-appropriate real-life scenario questions with workspace boxes',
+  'Circle the correct answer: multiple-choice with 3 options per question (no checkboxes, just circle)',
+  'Arrange in order: jumbled items (numbers, steps, events) that student re-orders by writing 1, 2, 3...',
+  'Complete the table: a partially filled table/chart where student fills empty cells',
+  'Odd one out: rows of 4-5 items where student crosses out the one that does not belong',
+  'Classify and sort: a list of mixed items and 2-3 category boxes to sort them into',
+  'Look and answer: an illustration or diagram followed by 3-4 observation-based questions'
+];
+
+const WORKSHEET_SECTIONS_UPPER = [
+  'Multiple choice questions (MCQ): 4-5 questions with options A, B, C, D and answer circles',
+  'Fill in the blanks: sentences with key terms missing (no word bank — recall-based)',
+  'Match the following: two columns of terms/definitions to connect',
+  'True or False with correction: statements where student marks T/F and corrects false ones',
+  'Diagram labeling: a detailed diagram with numbered blank labels to fill in',
+  'Short answer questions: 4-5 conceptual questions with 3-line answer spaces',
+  'Reasoning / Give reasons: 2-3 "Why" or "Explain" questions with multi-line answer boxes',
+  'Complete the table/chart: a data table with some cells blank for the student to compute and fill',
+  'Solve step-by-step: 2-3 problems with structured workspace showing step 1, step 2, step 3 boxes',
+  'Define the following: 4-5 key terms with blank lines for writing definitions',
+  'Identify and classify: a list of items to sort into provided category columns',
+  'Crossword or word puzzle: a small crossword grid (max 6-8 words) with clues listed below'
+];
+
+function getWorksheetSections(level, index) {
+  let pool;
+  if (level <= 0) {
+    pool = WORKSHEET_SECTIONS_PRESCHOOL;
+  } else if (level <= 4) {
+    pool = WORKSHEET_SECTIONS_PRIMARY;
+  } else {
+    pool = WORKSHEET_SECTIONS_UPPER;
+  }
+
+  // Pick 4-5 sections, rotating start position by index so each worksheet gets different combos
+  const count = (level <= 0) ? 4 : 5;
+  const offset = (index * 3) % pool.length; // shift by 3 per worksheet to maximize variety
+  const sections = [];
+  for (let i = 0; i < count; i++) {
+    sections.push(pool[(offset + i) % pool.length]);
+  }
+  return sections;
 }
 
 function slugify(text) {
@@ -163,10 +224,14 @@ export function generatePrompt(topic, assetType, index = 0) {
   if (assetType === 'chart') {
     imagePrompt = `Create a high-quality educational wall chart titled '${assetTitle}'. Target audience: ${assignedClass} students (DO NOT print class name on the image). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content focus: clearly illustrate and label '${focusItem}' with accurate educational detail. Typography: use clean bold sans-serif headings and legible body text. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   } else {
-    imagePrompt = `Create a print-ready educational worksheet titled '${assetTitle}'. Target audience: ${assignedClass} students (DO NOT print class name on the worksheet). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content focus: exercise questions about '${focusItem}' with age-appropriate difficulty. Include numbered questions, clear instructions text at the top of each section, and generous blank answer spaces (lines, boxes, circles). Typography: clean sans-serif for instructions, mono-spaced or handwriting-style blanks for answers. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
+    // Build diverse worksheet sections
+    const sections = getWorksheetSections(classLevel, index);
+    const sectionList = sections.map((s, i) => `Section ${i + 1}: ${s}`).join('. ');
+
+    imagePrompt = `Create a print-ready educational worksheet titled '${assetTitle}'. Target audience: ${assignedClass} students (DO NOT print class name on the worksheet). Art style: ${style}. Color palette: ${colorPalette}. Topic focus: '${focusItem}' — all questions must test different aspects and skills of this topic. IMPORTANT: The worksheet MUST have exactly ${sections.length} clearly separated sections, each using a COMPLETELY DIFFERENT question format. The sections are: ${sectionList}. Every section must have its own bold section heading (e.g., "A. Fill in the Blanks", "B. Match the Following"). DO NOT repeat the same question type across sections. Include generous blank answer spaces (lines, boxes, circles) for student responses. Typography: clean sans-serif for instructions, clear numbered questions. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   }
 
-  const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified';
+  const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified, word search puzzle, repetitive question format, all same question type';
   const filename = getAssetFilename(topic, assetType, index, totalOfType, assignedClass, focusItem);
 
   return {
@@ -177,3 +242,4 @@ export function generatePrompt(topic, assetType, index = 0) {
     negative_prompt: negativePrompt
   };
 }
+
