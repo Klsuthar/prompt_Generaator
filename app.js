@@ -452,26 +452,81 @@ function renderSidebar() {
     </div>
   `;
 
+  // Helper to clear search state across all UI inputs
+  const clearSearchInputs = () => {
+    filters.search = '';
+    saveFilters();
+    
+    const inputs = document.querySelectorAll('#search-input');
+    inputs.forEach(input => {
+      input.value = '';
+    });
+    
+    ['#desktop-sidebar', '#mobile-filter-drawer'].forEach(p => {
+      const inputEl = document.querySelector(`${p} #search-input`);
+      if (inputEl) {
+        const clearBtnEl = inputEl.parentNode.querySelector('#search-clear-btn');
+        if (clearBtnEl) {
+          clearBtnEl.remove();
+        }
+      }
+    });
+    
+    renderTopicGrid();
+  };
+
   // Bind Search events
   const bindSearchEvents = (prefix) => {
     const searchInput = document.querySelector(`${prefix} #search-input`);
     if (searchInput) {
       searchInput.value = filters.search;
-      searchInput.oninput = (e) => {
-        filters.search = e.target.value;
-        saveFilters();
-        renderSidebar();
-        renderTopicGrid();
+      searchInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = e.target.value.trim();
+          filters.search = val;
+          saveFilters();
+          
+          // Sync values to all search inputs
+          const inputs = document.querySelectorAll('#search-input');
+          inputs.forEach(input => {
+            input.value = val;
+          });
+          
+          // Sync clear buttons for both sidebars
+          ['#desktop-sidebar', '#mobile-filter-drawer'].forEach(p => {
+            const inputEl = document.querySelector(`${p} #search-input`);
+            if (!inputEl) return;
+            const parent = inputEl.parentNode;
+            let clearBtn = parent.querySelector('#search-clear-btn');
+            if (val) {
+              if (!clearBtn) {
+                clearBtn = document.createElement('button');
+                clearBtn.id = 'search-clear-btn';
+                clearBtn.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200';
+                clearBtn.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5"></i>';
+                parent.appendChild(clearBtn);
+                clearBtn.onclick = () => {
+                  clearSearchInputs();
+                };
+                lucide.createIcons();
+              }
+            } else {
+              if (clearBtn) {
+                clearBtn.remove();
+              }
+            }
+          });
+
+          renderTopicGrid();
+        }
       };
     }
 
     const clearBtn = document.querySelector(`${prefix} #search-clear-btn`);
     if (clearBtn) {
       clearBtn.onclick = () => {
-        filters.search = '';
-        saveFilters();
-        renderSidebar();
-        renderTopicGrid();
+        clearSearchInputs();
       };
     }
 
