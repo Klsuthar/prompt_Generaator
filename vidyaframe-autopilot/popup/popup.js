@@ -254,9 +254,9 @@
       const isActive = item.status === 'sending' || item.status === 'generating';
       
       html += `
-        <div class="queue-item ${isActive ? 'active' : ''}" data-id="${item.id}">
+        <div class="queue-item ${isActive ? 'active' : ''} ${item.status}" data-id="${item.id}" title="${item.filename}${item.error ? '\nError: ' + item.error : ''}">
           <span class="queue-item-icon">${icon}</span>
-          <span class="queue-item-name" title="${item.filename}">#${item.topicId} ${item.topicName}</span>
+          <span class="queue-item-name">#${item.topicId} ${item.topicName}</span>
           <span class="queue-item-type ${item.assetType}">${item.assetType === 'chart' ? 'CHT' : (item.assetType === 'worksheet' ? 'SHT' : 'CST')} ${item.assetIndex + 1}</span>
           ${item.status === 'pending' || item.status === 'failed' 
             ? `<button class="queue-item-remove" data-remove-id="${item.id}" title="Remove">✕</button>` 

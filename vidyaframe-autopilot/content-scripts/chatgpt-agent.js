@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const ns = window.AUTOPILOT || {};
+  const ns = typeof AUTOPILOT !== 'undefined' ? AUTOPILOT : (window.AUTOPILOT || {});
   const SELECTORS = ns.CHATGPT_SELECTORS || {
     EDITOR: '#prompt-textarea, div[contenteditable="true"].ProseMirror, textarea[data-id="root"]',
     SEND_BUTTON: 'button[data-testid="send-button"], button[aria-label="Send prompt"]',
