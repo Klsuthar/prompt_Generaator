@@ -194,32 +194,33 @@
       editor.focus();
       
       // Clear existing content
-      editor.innerHTML = '';
-      
-      // Create a paragraph with the text
-      const p = document.createElement('p');
-      p.textContent = text;
-      editor.appendChild(p);
-      
-      // Dispatch input event to notify React/ProseMirror
-      editor.dispatchEvent(new InputEvent('input', {
-        bubbles: true,
-        cancelable: true,
-        inputType: 'insertText',
-        data: text
-      }));
-
-      // Also try setting via execCommand for broader compatibility
       try {
-        // Select all and replace
         const selection = window.getSelection();
         const range = document.createRange();
         range.selectNodeContents(editor);
         selection.removeAllRanges();
         selection.addRange(range);
-        document.execCommand('insertText', false, text);
-      } catch {
-        // execCommand may not work in all contexts, that's OK
+        document.execCommand('delete', false);
+      } catch (e) {
+        editor.innerHTML = '';
+      }
+
+      editor.focus();
+
+      // Dispatch paste ClipboardEvent (ProseMirror catches this and updates React state perfectly)
+      try {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: dataTransfer
+        });
+        editor.dispatchEvent(pasteEvent);
+      } catch (err) {
+        console.warn('[AutoPilot] Paste event failed, falling back to innerHTML', err);
+        editor.innerHTML = '<p>' + text + '</p>';
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }
 

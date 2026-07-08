@@ -43,42 +43,7 @@
   let topicsData = null;
   let isExtensionReady = false;
 
-  // ─── Main World Intercept Injection ───────────────────────────────
-  function injectFetchOverride() {
-    const script = document.createElement('script');
-    script.textContent = `
-      (function() {
-        let topicsResolver = null;
-        const topicsPromise = new Promise(resolve => { topicsResolver = resolve; });
-
-        window.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'AUTOPILOT_DATA') {
-            topicsResolver(event.data.topics);
-          }
-        });
-
-        const originalFetch = window.fetch;
-        window.fetch = async function(url, options) {
-          const urlStr = typeof url === 'string' ? url : (url && url.url) || '';
-          if (urlStr.includes('topics.json')) {
-            console.log('[AutoPilot] Intercepted fetch for topics.json. Waiting for extension data...');
-            const data = await topicsPromise;
-            console.log('[AutoPilot] Returning extension data for topics.json.');
-            return new Response(JSON.stringify(data), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
-          return originalFetch.apply(this, arguments);
-        };
-      })();
-    `;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
-  }
-
-  // Inject early at document_start
-  injectFetchOverride();
+  // Fetch topics.json immediately at document_start (dispatched to fetch-interceptor.js)
   loadTopicsData();
 
   // ─── Fetch Topics Data ────────────────────────────────────────────

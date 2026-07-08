@@ -45,6 +45,17 @@
         "file:///*",
         "https://klsuthar.github.io/prompt_Generaator/*"
       ],
+      "js": ["content-scripts/fetch-interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "file:///*",
+        "https://klsuthar.github.io/prompt_Generaator/*"
+      ],
       "js": ["lib/constants.js", "lib/prompt-builder.js", "content-scripts/prompt-studio.js"],
       "css": ["content-scripts/prompt-studio.css"],
       "run_at": "document_start"
