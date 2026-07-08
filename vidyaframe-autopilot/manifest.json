@@ -18,7 +18,8 @@
     "https://chat.openai.com/*",
     "http://localhost:*/*",
     "http://127.0.0.1:*/*",
-    "file:///*"
+    "file:///*",
+    "https://klsuthar.github.io/prompt_Generaator/*"
   ],
 
   "background": {
@@ -41,7 +42,8 @@
       "matches": [
         "http://localhost:*/*",
         "http://127.0.0.1:*/*",
-        "file:///*"
+        "file:///*",
+        "https://klsuthar.github.io/prompt_Generaator/*"
       ],
       "js": ["lib/constants.js", "lib/prompt-builder.js", "content-scripts/prompt-studio.js"],
       "css": ["content-scripts/prompt-studio.css"],
