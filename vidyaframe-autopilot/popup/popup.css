@@ -430,6 +430,11 @@ body {
   color: #A78BFA;
 }
 
+.queue-item-type.custom {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+}
+
 .queue-item-remove {
   background: none;
   border: none;

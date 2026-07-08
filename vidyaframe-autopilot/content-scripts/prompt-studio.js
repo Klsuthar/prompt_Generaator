@@ -26,6 +26,7 @@
       title.includes('Prompt Studio') ||
       url.includes('prompt_generaator') ||
       url.includes('promptgenerator') ||
+      url.includes('klsuthar.github.io') ||
       url.endsWith('index.html') ||
       (url.includes('localhost') && window.location.pathname === '/') ||
       (url.includes('127.0.0.1') && window.location.pathname === '/')
@@ -166,6 +167,33 @@
 
       if (response && response.success) {
         showAutoPilotToast(`⚡ Queued ${response.added} prompts for "${topic.topic_name}"`, 'success');
+      }
+    } catch (err) {
+      showAutoPilotToast(`❌ Extension error: ${err.message}`, 'error');
+    }
+  }
+
+  async function queueTypeForTopic(topic, assetType) {
+    if (!ns.PromptBuilder) {
+      showAutoPilotToast('❌ Prompt builder not loaded', 'error');
+      return;
+    }
+
+    const items = [];
+    const count = assetType === 'chart' ? (topic.charts_count || 0) : (topic.worksheets_count || 0);
+
+    for (let i = 0; i < count; i++) {
+      items.push(ns.PromptBuilder.buildQueueItem(topic, assetType, i));
+    }
+
+    try {
+      const response = await sendToBackground({
+        action: 'QUEUE_PROMPTS',
+        prompts: items
+      });
+
+      if (response && response.success) {
+        showAutoPilotToast(`⚡ Queued ${response.added} ${assetType === 'chart' ? 'charts' : 'sheets'} for "${topic.topic_name}"`, 'success');
       }
     } catch (err) {
       showAutoPilotToast(`❌ Extension error: ${err.message}`, 'error');
@@ -365,25 +393,40 @@
       const topic = topicsData?.find(t => t.id === topicId);
       if (!topic) return;
 
-      // Add a "Queue All" button row below
+      // Add a container for queue buttons (split into charts and sheets)
       const queueRow = document.createElement('div');
-      queueRow.className = 'autopilot-card-btn mt-2';
+      queueRow.className = 'autopilot-card-btn mt-2 grid grid-cols-2 gap-2';
       
-      const queueBtn = document.createElement('button');
-      queueBtn.className = 'autopilot-card-queue-btn';
-      queueBtn.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      const queueChartsBtn = document.createElement('button');
+      queueChartsBtn.className = 'autopilot-card-queue-btn';
+      queueChartsBtn.innerHTML = `
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
         </svg>
-        <span>⚡ Queue All (${topic.total_assets || (topic.charts_count + topic.worksheets_count)})</span>
+        <span>⚡ Charts (${topic.charts_count})</span>
       `;
-      queueBtn.onclick = (e) => {
+      queueChartsBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        queueAllForTopic(topic);
+        queueTypeForTopic(topic, 'chart');
       };
       
-      queueRow.appendChild(queueBtn);
+      const queueSheetsBtn = document.createElement('button');
+      queueSheetsBtn.className = 'autopilot-card-queue-btn';
+      queueSheetsBtn.innerHTML = `
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span>⚡ Sheets (${topic.worksheets_count})</span>
+      `;
+      queueSheetsBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        queueTypeForTopic(topic, 'worksheet');
+      };
+      
+      queueRow.appendChild(queueChartsBtn);
+      queueRow.appendChild(queueSheetsBtn);
       btnGrid.parentElement.appendChild(queueRow);
     });
   }

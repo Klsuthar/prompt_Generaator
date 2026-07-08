@@ -131,6 +131,21 @@
     </div>
   </section>
 
+  <!-- Custom Prompts -->
+  <section id="custom-section" class="card collapsible">
+    <div class="card-header clickable" id="custom-toggle">
+      <span class="card-label">✏️ Custom Prompts</span>
+      <span class="collapse-arrow" id="custom-arrow">▼</span>
+    </div>
+    <div id="custom-body" class="settings-body" style="display: none;">
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+        <span class="card-label" style="font-size: 9px; color: #64748B;">Enter prompts (one per line):</span>
+        <textarea id="custom-prompts-input" placeholder="Create a worksheet for addition...&#10;Create a wall chart for alphabets..." style="width: 100%; height: 80px; padding: 8px; border-radius: 8px; border: 1px solid rgba(51, 65, 85, 0.5); background: #1E293B; color: #E2E8F0; font-family: inherit; font-size: 11px; resize: vertical; outline: none;"></textarea>
+        <button id="btn-add-custom" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.08); color: #34D399; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">Add Custom Prompts to Queue</button>
+      </div>
+    </div>
+  </section>
+
   <!-- Settings -->
   <section id="settings-section" class="card collapsible">
     <div class="card-header clickable" id="settings-toggle">

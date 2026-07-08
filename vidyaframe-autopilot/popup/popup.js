@@ -45,6 +45,12 @@
     btnClearCompleted: document.getElementById('btn-clear-completed'),
     btnClearQueue:    document.getElementById('btn-clear-queue'),
 
+    customToggle:     document.getElementById('custom-toggle'),
+    customArrow:      document.getElementById('custom-arrow'),
+    customBody:       document.getElementById('custom-body'),
+    customPromptsInput: document.getElementById('custom-prompts-input'),
+    btnAddCustom:     document.getElementById('btn-add-custom'),
+
     settingsToggle:   document.getElementById('settings-toggle'),
     settingsArrow:    document.getElementById('settings-arrow'),
     settingsBody:     document.getElementById('settings-body'),
@@ -251,7 +257,7 @@
         <div class="queue-item ${isActive ? 'active' : ''}" data-id="${item.id}">
           <span class="queue-item-icon">${icon}</span>
           <span class="queue-item-name" title="${item.filename}">#${item.topicId} ${item.topicName}</span>
-          <span class="queue-item-type ${item.assetType}">${item.assetType === 'chart' ? 'CHT' : 'SHT'} ${item.assetIndex + 1}</span>
+          <span class="queue-item-type ${item.assetType}">${item.assetType === 'chart' ? 'CHT' : (item.assetType === 'worksheet' ? 'SHT' : 'CST')} ${item.assetIndex + 1}</span>
           ${item.status === 'pending' || item.status === 'failed' 
             ? `<button class="queue-item-remove" data-remove-id="${item.id}" title="Remove">✕</button>` 
             : ''}
@@ -348,6 +354,66 @@
   DOM.btnClearQueue.addEventListener('click', async () => {
     if (confirm('Clear the entire queue? This cannot be undone.')) {
       await sendAction('CLEAR_QUEUE');
+      fetchState();
+      fetchQueue();
+    }
+  });
+
+  // Custom Prompts toggle
+  DOM.customToggle.addEventListener('click', () => {
+    const isOpen = DOM.customBody.style.display !== 'none';
+    DOM.customBody.style.display = isOpen ? 'none' : 'flex';
+    DOM.customArrow.classList.toggle('open', !isOpen);
+  });
+
+  // Custom Prompts add to queue
+  DOM.btnAddCustom.addEventListener('click', async () => {
+    const text = DOM.customPromptsInput.value.trim();
+    if (!text) return;
+
+    // Split by newlines, filter empty lines
+    const lines = text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (lines.length === 0) return;
+
+    const batchId = `custom-batch-${Date.now()}`;
+    const prompts = lines.map((line, index) => {
+      return {
+        id: `custom-${Date.now()}-${index}`,
+        topicId: 'custom',
+        topicName: 'Custom List',
+        subject: 'Custom',
+        assetType: 'custom',
+        assetIndex: index,
+        assignedClass: 'N/A',
+        focusItem: line.substring(0, 30) + (line.length > 30 ? '...' : ''),
+        promptText: line,
+        negativePrompt: '',
+        filename: `custom-prompt-${index + 1}`,
+        priority: 'Month 1',
+        status: 'pending',
+        batchId: batchId
+      };
+    });
+
+    DOM.btnAddCustom.disabled = true;
+    const oldText = DOM.btnAddCustom.textContent;
+    DOM.btnAddCustom.textContent = 'Adding...';
+
+    const response = await sendAction('QUEUE_PROMPTS', { prompts });
+    
+    DOM.btnAddCustom.disabled = false;
+    DOM.btnAddCustom.textContent = oldText;
+    DOM.customPromptsInput.value = '';
+
+    if (response && response.success) {
+      // Close custom body
+      DOM.customBody.style.display = 'none';
+      DOM.customArrow.classList.remove('open');
+      
+      // Refresh UI
       fetchState();
       fetchQueue();
     }
