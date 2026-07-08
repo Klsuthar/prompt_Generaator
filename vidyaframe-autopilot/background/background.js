@@ -17,6 +17,7 @@ const ACTIONS = {
   GET_STATE: 'GET_STATE',
   GET_QUEUE: 'GET_QUEUE',
   PING: 'PING',
+  GET_TOPICS: 'GET_TOPICS',
   INJECT_PROMPT: 'INJECT_PROMPT',
   CHECK_READY: 'CHECK_READY',
   PROMPT_SENT: 'PROMPT_SENT',
@@ -126,6 +127,18 @@ async function handleMessage(message, sender) {
       const queue = await QueueManager.getQueue();
       const stats = await QueueManager.getQueueStats();
       return { success: true, queue, stats };
+    }
+
+    case ACTIONS.GET_TOPICS: {
+      try {
+        const url = chrome.runtime.getURL('data/topics.json');
+        const res = await fetch(url);
+        const topics = await res.json();
+        return { success: true, topics };
+      } catch (err) {
+        console.error('[AutoPilot] Failed to load topics.json:', err);
+        return { success: false, error: err.message };
+      }
     }
 
     case ACTIONS.GET_STATE: {

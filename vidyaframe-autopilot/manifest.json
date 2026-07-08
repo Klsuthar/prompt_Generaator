@@ -45,7 +45,7 @@
       ],
       "js": ["lib/constants.js", "lib/prompt-builder.js", "content-scripts/prompt-studio.js"],
       "css": ["content-scripts/prompt-studio.css"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     },
     {
       "matches": [
@@ -63,5 +63,11 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["data/topics.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

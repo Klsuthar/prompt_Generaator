@@ -22,6 +22,7 @@ var AUTOPILOT = AUTOPILOT || {};
     GET_STATE: 'GET_STATE',
     GET_QUEUE: 'GET_QUEUE',
     PING: 'PING',
+    GET_TOPICS: 'GET_TOPICS',
 
     // Background → ChatGPT Content Script
     INJECT_PROMPT: 'INJECT_PROMPT',

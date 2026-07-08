@@ -15,18 +15,24 @@
 
   // ─── Guard: Only run on Prompt Studio pages ───────────────────────
   function isPromptStudio() {
-    const title = document.title || '';
     const header = document.getElementById('app-header');
     const grid = document.getElementById('app-grid');
+    if (header && grid) return true;
+
+    const title = document.title || '';
+    const url = (window.location.href || '').toLowerCase();
     return (
       title.includes('VidyaFrame') ||
       title.includes('Prompt Studio') ||
-      (header && grid)
+      url.includes('prompt_generaator') ||
+      url.includes('promptgenerator') ||
+      url.endsWith('index.html') ||
+      (url.includes('localhost') && window.location.pathname === '/') ||
+      (url.includes('127.0.0.1') && window.location.pathname === '/')
     );
   }
 
   if (!isPromptStudio()) {
-    console.log('[AutoPilot] Not a Prompt Studio page, skipping.');
     return;
   }
 
@@ -36,16 +42,57 @@
   let topicsData = null;
   let isExtensionReady = false;
 
+  // ─── Main World Intercept Injection ───────────────────────────────
+  function injectFetchOverride() {
+    const script = document.createElement('script');
+    script.textContent = `
+      (function() {
+        let topicsResolver = null;
+        const topicsPromise = new Promise(resolve => { topicsResolver = resolve; });
+
+        window.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'AUTOPILOT_DATA') {
+            topicsResolver(event.data.topics);
+          }
+        });
+
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+          const urlStr = typeof url === 'string' ? url : (url && url.url) || '';
+          if (urlStr.includes('topics.json')) {
+            console.log('[AutoPilot] Intercepted fetch for topics.json. Waiting for extension data...');
+            const data = await topicsPromise;
+            console.log('[AutoPilot] Returning extension data for topics.json.');
+            return new Response(JSON.stringify(data), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+          return originalFetch.apply(this, arguments);
+        };
+      })();
+    `;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  }
+
+  // Inject early at document_start
+  injectFetchOverride();
+  loadTopicsData();
+
   // ─── Fetch Topics Data ────────────────────────────────────────────
   async function loadTopicsData() {
     try {
-      // Try to fetch topics.json from the same origin
-      const res = await fetch('src/data/topics.json');
+      const url = chrome.runtime.getURL('data/topics.json');
+      const res = await fetch(url);
       topicsData = await res.json();
-      console.log(`[AutoPilot] Loaded ${topicsData.length} topics from topics.json`);
+      
+      // Dispatch data to the injected script in main world
+      window.postMessage({ type: 'AUTOPILOT_DATA', topics: topicsData }, '*');
+      console.log(`[AutoPilot] Loaded ${topicsData.length} topics from extension package.`);
+      return;
     } catch (err) {
-      console.warn('[AutoPilot] Could not load topics.json directly, will read from DOM.', err);
-      topicsData = null;
+      console.warn('[AutoPilot] Could not load topics from extension package directly.', err);
     }
   }
 
@@ -449,8 +496,10 @@
   // ─── Initialization ──────────────────────────────────────────────
 
   async function init() {
-    // Load topics data
-    await loadTopicsData();
+    // Load topics data if not already loaded
+    if (!topicsData) {
+      await loadTopicsData();
+    }
 
     // Check if extension background is reachable
     const ready = await checkExtension();
