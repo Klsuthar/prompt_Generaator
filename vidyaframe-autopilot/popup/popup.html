@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VidyaFrame AutoPilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  
+  <!-- Header -->
+  <header id="popup-header">
+    <div class="header-left">
+      <div class="header-icon">⚡</div>
+      <div>
+        <h1>AutoPilot</h1>
+        <p class="header-subtitle">VidyaFrame Prompt Studio</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="state-badge" class="state-badge state-idle">IDLE</span>
+    </div>
+  </header>
+
+  <!-- Progress Section -->
+  <section id="progress-section" class="card">
+    <div class="card-header">
+      <span class="card-label">Queue Progress</span>
+      <span id="progress-percent" class="progress-percent">0%</span>
+    </div>
+    <div class="progress-bar-container">
+      <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+    </div>
+    <div class="progress-detail">
+      <span id="progress-text">No prompts in queue</span>
+      <span id="eta-text" class="eta-text"></span>
+    </div>
+  </section>
+
+  <!-- Current Item -->
+  <section id="current-section" class="card" style="display: none;">
+    <div class="card-header">
+      <span class="card-label">Current Prompt</span>
+      <span id="current-status" class="current-status">⏳</span>
+    </div>
+    <div class="current-details">
+      <div class="current-name" id="current-name">—</div>
+      <div class="current-meta">
+        <span id="current-type" class="meta-chip">—</span>
+        <span id="current-class" class="meta-chip">—</span>
+        <span id="current-elapsed" class="meta-chip elapsed">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section id="controls-section" class="card">
+    <div class="controls-grid">
+      <button id="btn-start" class="ctrl-btn ctrl-start" title="Start">
+        <span class="ctrl-icon">▶</span>
+        <span>Start</span>
+      </button>
+      <button id="btn-pause" class="ctrl-btn ctrl-pause" title="Pause" disabled>
+        <span class="ctrl-icon">⏸</span>
+        <span>Pause</span>
+      </button>
+      <button id="btn-resume" class="ctrl-btn ctrl-resume" title="Resume" style="display: none;">
+        <span class="ctrl-icon">▶</span>
+        <span>Resume</span>
+      </button>
+      <button id="btn-stop" class="ctrl-btn ctrl-stop" title="Stop" disabled>
+        <span class="ctrl-icon">⏹</span>
+        <span>Stop</span>
+      </button>
+      <button id="btn-skip" class="ctrl-btn ctrl-skip" title="Skip Current" disabled>
+        <span class="ctrl-icon">⏭</span>
+        <span>Skip</span>
+      </button>
+      <button id="btn-retry" class="ctrl-btn ctrl-retry" title="Retry Failed" disabled>
+        <span class="ctrl-icon">🔄</span>
+        <span>Retry</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Statistics -->
+  <section id="stats-section" class="card">
+    <div class="card-header">
+      <span class="card-label">Statistics</span>
+      <button id="btn-clear-completed" class="link-btn" title="Clear completed items">Clear Done</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item stat-completed">
+        <span class="stat-value" id="stat-completed">0</span>
+        <span class="stat-label">✅ Completed</span>
+      </div>
+      <div class="stat-item stat-failed">
+        <span class="stat-value" id="stat-failed">0</span>
+        <span class="stat-label">❌ Failed</span>
+      </div>
+      <div class="stat-item stat-skipped">
+        <span class="stat-value" id="stat-skipped">0</span>
+        <span class="stat-label">⏭ Skipped</span>
+      </div>
+      <div class="stat-item stat-pending">
+        <span class="stat-value" id="stat-pending">0</span>
+        <span class="stat-label">⏳ Pending</span>
+      </div>
+      <div class="stat-item stat-avg-time">
+        <span class="stat-value" id="stat-avg-time">—</span>
+        <span class="stat-label">⏱ Avg Time</span>
+      </div>
+      <div class="stat-item stat-total">
+        <span class="stat-value" id="stat-total">0</span>
+        <span class="stat-label">📋 Total</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Queue List -->
+  <section id="queue-section" class="card">
+    <div class="card-header">
+      <span class="card-label">Queue</span>
+      <button id="btn-clear-queue" class="link-btn link-btn-danger" title="Clear entire queue">Clear All</button>
+    </div>
+    <div id="queue-list" class="queue-list">
+      <div class="queue-empty">No prompts in queue. Open Prompt Studio and click "Queue All Visible" to get started.</div>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="settings-section" class="card collapsible">
+    <div class="card-header clickable" id="settings-toggle">
+      <span class="card-label">⚙️ Settings</span>
+      <span class="collapse-arrow" id="settings-arrow">▼</span>
+    </div>
+    <div id="settings-body" class="settings-body" style="display: none;">
+      <div class="setting-row">
+        <label for="setting-cooldown">Cooldown between prompts</label>
+        <select id="setting-cooldown">
+          <option value="2000">2s</option>
+          <option value="5000" selected>5s</option>
+          <option value="10000">10s</option>
+          <option value="15000">15s</option>
+          <option value="30000">30s</option>
+          <option value="60000">60s</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="setting-maxwait">Max generation wait</label>
+        <select id="setting-maxwait">
+          <option value="120000">2 min</option>
+          <option value="180000" selected>3 min</option>
+          <option value="300000">5 min</option>
+          <option value="600000">10 min</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="setting-retries">Max retries per prompt</label>
+        <select id="setting-retries">
+          <option value="0">No retries</option>
+          <option value="1">1 retry</option>
+          <option value="2" selected>2 retries</option>
+          <option value="3">3 retries</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="setting-autostart">Auto-start on queue</label>
+        <input type="checkbox" id="setting-autostart">
+      </div>
+      <div class="setting-row">
+        <label for="setting-notify">Notify on complete</label>
+        <input type="checkbox" id="setting-notify" checked>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="popup-footer">
+    <span>VidyaFrame AutoPilot v1.0.0</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
