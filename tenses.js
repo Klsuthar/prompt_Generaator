@@ -1,5 +1,5 @@
 // ============================================================
-// VidyaFrame — English Tenses: Prompt Generator Page (Simple & Fast)
+// VidyaFrame — English Tenses: Prompt Studio (Redesigned & Premium)
 // ============================================================
 
 // --- Theme Management ---
@@ -15,7 +15,7 @@ let panelAssetType = 'chart'; // 'chart' or 'worksheet'
 let panelAssetIndex = 0;
 
 // --- Copy Tracking (localStorage) ---
-const TENSE_COPIED_PREFIX = 'vidyaframe_tense_copied_v4_';
+const TENSE_COPIED_PREFIX = 'vidyaframe_tense_copied_v5_';
 
 function getTenseCopiedStatus(tenseId, assetType, classLevel, index) {
   return localStorage.getItem(`${TENSE_COPIED_PREFIX}${tenseId}_${assetType}_${classLevel}_${index}`) === 'true';
@@ -23,6 +23,19 @@ function getTenseCopiedStatus(tenseId, assetType, classLevel, index) {
 
 function setTenseCopiedStatus(tenseId, assetType, classLevel, index, value) {
   const key = `${TENSE_COPIED_PREFIX}${tenseId}_${assetType}_${classLevel}_${index}`;
+  if (value) {
+    localStorage.setItem(key, 'true');
+  } else {
+    localStorage.removeItem(key);
+  }
+}
+
+function getMixedCopiedStatus(classLevel, index) {
+  return localStorage.getItem(`${TENSE_COPIED_PREFIX}mixed_${classLevel}_${index}`) === 'true';
+}
+
+function setMixedCopiedStatus(classLevel, index, value) {
+  const key = `${TENSE_COPIED_PREFIX}mixed_${classLevel}_${index}`;
   if (value) {
     localStorage.setItem(key, 'true');
   } else {
@@ -45,16 +58,16 @@ function updateThemeIcon() {
   const btn = document.getElementById('theme-toggle-btn');
   if (btn) {
     btn.innerHTML = `<i data-lucide="${currentTheme === 'dark' ? 'sun' : 'moon'}" class="w-4 h-4"></i>`;
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
 
 // --- Class Level Definitions ---
 const CLASS_LEVELS = [
-  { id: 'class4-5', label: 'Class 4–5', shortLabel: '4-5', color: 'emerald', description: 'Main Tenses Overview' },
-  { id: 'class6', label: 'Class 6', shortLabel: '6', color: 'blue', description: 'Present/Past/Future Parts' },
-  { id: 'class7-8', label: 'Class 7–8', shortLabel: '7-8', color: 'violet', description: 'Tense-wise Details' },
-  { id: 'class9-10', label: 'Class 9–10', shortLabel: '9-10', color: 'rose', description: '12 Specific Tenses Mastery' },
+  { id: 'class4-5', label: 'Class 4–5', shortLabel: '4-5', color: 'emerald', icon: 'book-open', title: 'Tenses Overview', description: 'Present, Past & Future basics', assetsText: '3 Assets' },
+  { id: 'class6', label: 'Class 6', shortLabel: '6', color: 'blue', icon: 'layers', title: 'Tense Parts', description: 'Simple, Continuous, Perfect parts', assetsText: '8 Assets' },
+  { id: 'class7-8', label: 'Class 7–8', shortLabel: '7-8', color: 'violet', icon: 'sliders', title: 'Tense Details', description: 'Detailed rules, formulas, examples', assetsText: '16 Assets' },
+  { id: 'class9-10', label: 'Class 9–10', shortLabel: '9-10', color: 'rose', icon: 'crown', title: 'Tense Subtypes Mastery', description: 'Advanced conjugation & subtypes', assetsText: '31 Assets' },
 ];
 
 const ASSET_COUNTS = {
@@ -66,41 +79,41 @@ const ASSET_COUNTS = {
 
 const TENSE_COLORS = {
   present: {
-    gradient: 'from-blue-500 to-cyan-500',
+    gradient: 'from-blue-500 to-indigo-650',
     bg: 'bg-blue-500/10 dark:bg-blue-500/15',
     border: 'border-blue-500/20 dark:border-blue-500/30',
     text: 'text-blue-600 dark:text-blue-400',
-    accentBg: 'bg-blue-500',
-    lightBg: 'bg-blue-50 dark:bg-blue-950/30',
+    accentBg: 'bg-blue-600',
+    hoverGlow: 'hover:shadow-blue-500/10',
   },
   past: {
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'from-amber-500 to-orange-600',
     bg: 'bg-amber-500/10 dark:bg-amber-500/15',
     border: 'border-amber-500/20 dark:border-amber-500/30',
     text: 'text-amber-600 dark:text-amber-400',
-    accentBg: 'bg-amber-500',
-    lightBg: 'bg-amber-50 dark:bg-amber-950/30',
+    accentBg: 'bg-amber-600',
+    hoverGlow: 'hover:shadow-amber-500/10',
   },
   future: {
-    gradient: 'from-emerald-500 to-teal-500',
+    gradient: 'from-emerald-500 to-teal-600',
     bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
     border: 'border-emerald-500/20 dark:border-emerald-500/30',
     text: 'text-emerald-600 dark:text-emerald-400',
-    accentBg: 'bg-emerald-500',
-    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    accentBg: 'bg-emerald-600',
+    hoverGlow: 'hover:shadow-emerald-500/10',
   },
   mixed: {
-    gradient: 'from-indigo-500 to-purple-500',
-    bg: 'bg-indigo-500/10 dark:bg-indigo-500/15',
-    border: 'border-indigo-500/20 dark:border-indigo-500/30',
-    text: 'text-indigo-600 dark:text-indigo-400',
-    accentBg: 'bg-indigo-500',
-    lightBg: 'bg-indigo-50 dark:bg-indigo-950/30',
+    gradient: 'from-violet-500 to-fuchsia-600',
+    bg: 'bg-violet-500/10 dark:bg-violet-500/15',
+    border: 'border-violet-500/20 dark:border-violet-500/30',
+    text: 'text-violet-600 dark:text-violet-400',
+    accentBg: 'bg-violet-600',
+    hoverGlow: 'hover:shadow-violet-500/10',
   }
 };
 
 // ============================================================
-// DATA STRUCTURE FOR DYNAMIC LEVEL CARDS
+// DATA STRUCTURE FOR CARDS AND WORKSHEETS
 // ============================================================
 
 const LEVEL_CARDS_DATA = {
@@ -183,7 +196,6 @@ const LEVEL_CARDS_DATA = {
     }
   ],
   'class9-10': [
-    // 12 Tense Subtypes specific cards
     { id: 'simple-present', name: 'Simple Present Tense', category: 'present', desc: 'Habits, regular routines, scientific facts, permanent situations.', focuses: ['Daily habits, routines, and recurring actions with formulas'] },
     { id: 'present-continuous', name: 'Present Continuous Tense', category: 'present', desc: 'Actions happening right now, temporary states, future plans.', focuses: ['Actions happening right now, at this exact moment of speaking'] },
     { id: 'present-perfect', name: 'Present Perfect Tense', category: 'present', desc: 'Past actions with present results, lifetime experiences.', focuses: ['Recent actions with clear consequences in the present moment'] },
@@ -215,14 +227,11 @@ const MIXED_WS_DATA = {
     { name: 'Mixed Worksheet 4', focus: 'Sentence re-ordering and tense identification' }
   ],
   'class9-10': [
-    // Subtype mixed worksheets
     { name: 'Mixed Worksheet 1 (Tense Subtypes Mixed)', focus: 'Advanced mixed practice covering all 12 tense subtypes' },
     { name: 'Mixed Worksheet 2 (Tense Subtypes Mixed)', focus: 'Error correction and sentence transformations for all 12 subtypes' },
-    // Category mixed worksheets (Present mixed, Past mixed, Future mixed)
     { name: 'Present Tenses Mixed Worksheet', focus: 'Combined exercises covering all 4 Present tense subtypes' },
     { name: 'Past Tenses Mixed Worksheet', focus: 'Combined exercises covering all 4 Past tense subtypes' },
     { name: 'Future Tenses Mixed Worksheet', focus: 'Combined exercises covering all 4 Future tense subtypes' },
-    // Grand general mixed worksheets
     { name: 'Mixed Tenses Board Exam Prep', focus: 'Board-style exam questions testing advanced tenses usage and transformations' },
     { name: 'Mixed Tenses Paragraph Editing', focus: 'Paragraph-level correction and passage completion with correct tenses' }
   ]
@@ -248,7 +257,6 @@ function getStyleForClass(level) {
   return 'clean professional academic diagram style with precise technical illustrations';
 }
 
-// Worksheet section pools
 const WS_SECTIONS_PRIMARY = [
   'Fill in the blanks: sentences with missing words, with a word bank provided at the top',
   'Match the columns: Column A and Column B with items to connect using lines or arrows',
@@ -290,8 +298,8 @@ function generateTensePrompt(tenseId, cardName, category, assetType, classStr, a
   const cardSlug = slugify(cardName);
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
 
-  // Vary focus item based on index
-  const focusItem = cardFocuses[assetIndex % cardFocuses.length] || 'general grammar usage rules';
+  const focuses = cardFocuses || ['general grammar usage rules'];
+  const focusItem = focuses[assetIndex % focuses.length] || 'general grammar usage rules';
 
   let contentDepth = '';
   if (classLevel <= 5) {
@@ -374,7 +382,7 @@ function showToast(message) {
     </div>
   `;
   toastNode.classList.remove('hidden');
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toastNode.classList.add('hidden'); }, 2000);
 }
@@ -404,39 +412,126 @@ function syntaxHighlightJson(jsonObj) {
 // UI RENDERING
 // ============================================================
 
+// --- Class level progress helper ---
+function getClassLevelProgress(levelId) {
+  let copiedCount = 0;
+  let totalAssets = 0;
+
+  const cl = CLASS_LEVELS.find(c => c.id === levelId);
+  if (!cl) return { copied: 0, total: 0, percent: 0 };
+
+  const classLabel = cl.label;
+  const cardsData = LEVEL_CARDS_DATA[levelId] || [];
+  const mixedWorksheets = MIXED_WS_DATA[levelId] || [];
+
+  cardsData.forEach(card => {
+    const counts = ASSET_COUNTS[levelId] || { charts: 1, worksheets: 1 };
+    const chartsCount = card.chartsCount || counts.charts || 1;
+    const worksheetsCount = card.worksheetsCount || counts.worksheets || 1;
+    totalAssets += chartsCount + worksheetsCount;
+
+    for (let i = 0; i < chartsCount; i++) {
+      if (getTenseCopiedStatus(card.id, 'chart', classLabel, i)) copiedCount++;
+    }
+    for (let i = 0; i < worksheetsCount; i++) {
+      if (getTenseCopiedStatus(card.id, 'worksheet', classLabel, i)) copiedCount++;
+    }
+  });
+
+  totalAssets += mixedWorksheets.length;
+  for (let i = 0; i < mixedWorksheets.length; i++) {
+    if (getMixedCopiedStatus(classLabel, i)) copiedCount++;
+  }
+
+  const percent = Math.round((copiedCount / totalAssets) * 100) || 0;
+  return { copied: copiedCount, total: totalAssets, percent };
+}
+
 function renderClassSelector() {
   const container = document.getElementById('class-selector');
   if (!container) return;
 
   container.innerHTML = CLASS_LEVELS.map(cl => {
+    const progress = getClassLevelProgress(cl.id);
     const isActive = selectedClassLevel === cl.id;
     const colorMap = {
-      emerald: { active: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30', inactive: 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600' },
-      blue: { active: 'bg-blue-500 text-white shadow-lg shadow-blue-500/30', inactive: 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600' },
-      violet: { active: 'bg-violet-500 text-white shadow-lg shadow-violet-500/30', inactive: 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 hover:text-violet-600' },
-      amber: { active: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30', inactive: 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-950/20 hover:text-amber-600' },
-      rose: { active: 'bg-rose-500 text-white shadow-lg shadow-rose-500/30', inactive: 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-600' },
+      emerald: {
+        active: 'border-emerald-500/80 bg-emerald-500/10 dark:bg-emerald-500/25 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-500/10 ring-2 ring-emerald-500/20 text-emerald-950 dark:text-emerald-200',
+        inactive: 'border-slate-200/60 dark:border-slate-800/60 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/10 hover:border-emerald-500/30 text-slate-700 dark:text-slate-350',
+        iconBg: 'bg-emerald-500 text-white',
+        iconBgInactive: 'bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400',
+        badge: 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-400 border-emerald-500/25'
+      },
+      blue: {
+        active: 'border-blue-500/80 bg-blue-500/10 dark:bg-blue-500/25 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/10 ring-2 ring-blue-500/20 text-blue-950 dark:text-blue-200',
+        inactive: 'border-slate-200/60 dark:border-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 hover:border-blue-500/30 text-slate-700 dark:text-slate-350',
+        iconBg: 'bg-blue-505 text-white',
+        iconBgInactive: 'bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400',
+        badge: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/25 dark:text-blue-400 border-blue-500/25'
+      },
+      violet: {
+        active: 'border-violet-500/80 bg-violet-500/10 dark:bg-violet-500/25 shadow-lg shadow-violet-500/20 dark:shadow-violet-500/10 ring-2 ring-violet-500/20 text-violet-955 dark:text-violet-200',
+        inactive: 'border-slate-200/60 dark:border-slate-800/60 hover:bg-violet-50/50 dark:hover:bg-violet-950/10 hover:border-violet-500/30 text-slate-700 dark:text-slate-350',
+        iconBg: 'bg-violet-505 text-white',
+        iconBgInactive: 'bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400',
+        badge: 'bg-violet-500/10 text-violet-600 dark:bg-violet-500/25 dark:text-violet-400 border-violet-500/25'
+      },
+      rose: {
+        active: 'border-rose-500/80 bg-rose-500/10 dark:bg-rose-500/25 shadow-lg shadow-rose-500/20 dark:shadow-rose-500/10 ring-2 ring-rose-500/20 text-rose-950 dark:text-rose-200',
+        inactive: 'border-slate-200/60 dark:border-slate-800/60 hover:bg-rose-50/50 dark:hover:bg-rose-950/10 hover:border-rose-500/30 text-slate-700 dark:text-slate-350',
+        iconBg: 'bg-rose-505 text-white',
+        iconBgInactive: 'bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400',
+        badge: 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/25 dark:text-rose-400 border-rose-500/25'
+      }
     };
-    const colors = colorMap[cl.color];
+    const colors = colorMap[cl.color] || colorMap.blue;
 
     return `
       <button
         data-class="${cl.id}"
-        class="class-level-btn flex flex-col items-center gap-1 px-5 py-3 sm:px-8 sm:py-4 rounded-2xl border transition-all duration-300 transform ${
+        class="class-level-btn glass-card flex flex-col w-full text-left p-4 sm:p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${
           isActive 
-            ? `${colors.active} border-transparent scale-105` 
-            : `${colors.inactive} border-slate-200/50 dark:border-slate-700/50`
+            ? `${colors.active} scale-[1.02] cursor-default` 
+            : `${colors.inactive} cursor-pointer`
         }"
       >
-        <span class="text-lg sm:text-xl font-extrabold">${cl.shortLabel}</span>
-        <span class="text-[10px] sm:text-xs font-semibold opacity-85">${cl.description}</span>
+        <div class="flex items-center justify-between gap-3 mb-3 w-full">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+            isActive ? colors.iconBg : colors.iconBgInactive
+          } group-hover:scale-105">
+            <i data-lucide="${cl.icon}" class="w-5 h-5"></i>
+          </div>
+          <span class="text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full border ${colors.badge}">
+            ${cl.assetsText}
+          </span>
+        </div>
+
+        <h3 class="text-base sm:text-lg font-black tracking-tight mt-1 flex items-baseline gap-1.5">
+          <span>${cl.label}</span>
+          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">${cl.title}</span>
+        </h3>
+        
+        <p class="text-xs text-slate-455 dark:text-slate-400 mt-1 leading-normal font-medium">${cl.description}</p>
+
+        <div class="w-full mt-4 flex items-center justify-between gap-2 border-t border-slate-200/30 dark:border-slate-800/30 pt-3">
+          <div class="flex-grow bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500 ${
+              isActive ? 'bg-indigo-500 dark:bg-indigo-400' : 'bg-slate-400/50 dark:bg-slate-600/50'
+            }" style="width: ${progress.percent}%"></div>
+          </div>
+          <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            ${progress.copied}/${progress.total}
+          </span>
+        </div>
       </button>
     `;
   }).join('');
 
   container.querySelectorAll('.class-level-btn').forEach(btn => {
     btn.onclick = () => {
-      selectedClassLevel = btn.getAttribute('data-class');
+      const targetClass = btn.getAttribute('data-class');
+      if (selectedClassLevel === targetClass) return;
+      selectedClassLevel = targetClass;
       renderClassSelector();
       renderQuickNav();
       renderOverviewStats();
@@ -447,8 +542,9 @@ function renderClassSelector() {
 
 function renderTenseCard(card, colors) {
   const classLabel = getCurrentClassLabel();
-  const chartsCount = card.chartsCount || 1;
-  const worksheetsCount = card.worksheetsCount || 1;
+  const counts = ASSET_COUNTS[selectedClassLevel] || { charts: 1, worksheets: 1 };
+  const chartsCount = card.chartsCount || counts.charts || 1;
+  const worksheetsCount = card.worksheetsCount || counts.worksheets || 1;
 
   let isComplete = true;
   for (let i = 0; i < chartsCount; i++) {
@@ -496,7 +592,7 @@ function renderTenseCard(card, colors) {
             }"
           >
             <i data-lucide="${isCopied ? 'check' : 'copy'}" class="w-2.5 h-2.5"></i>
-            <span>${isCopied ? 'Copied' : 'Copy'}</span>
+            <span>${isCopied ? '✅ Copied' : 'Copy'}</span>
           </button>
           <button
             data-tense-id="${card.id}" data-tense-name="${card.name}" data-category="${card.category}" data-prompt-type="chart" data-asset-idx="${i}"
@@ -540,7 +636,7 @@ function renderTenseCard(card, colors) {
             }"
           >
             <i data-lucide="${isCopied ? 'check' : 'copy'}" class="w-2.5 h-2.5"></i>
-            <span>${isCopied ? 'Copied' : 'Copy'}</span>
+            <span>${isCopied ? '✅ Copied' : 'Copy'}</span>
           </button>
           <button
             data-tense-id="${card.id}" data-tense-name="${card.name}" data-category="${card.category}" data-prompt-type="worksheet" data-asset-idx="${i}"
@@ -622,7 +718,7 @@ function renderMixedTensesSection() {
             </span>
             ${isCopied ? '<span class="text-[10px] font-bold text-emerald-500">✅ Copied</span>' : ''}
           </div>
-          <code class="block text-[9px] font-mono text-slate-455 dark:text-slate-405 bg-slate-55/50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/40 dark:border-slate-850 truncate mb-3" title="${promptObj.filename}">
+          <code class="block text-[9px] font-mono text-slate-455 dark:text-slate-405 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/40 dark:border-slate-850 truncate mb-3" title="${promptObj.filename}">
             File: ${promptObj.filename}
           </code>
         </div>
@@ -636,7 +732,7 @@ function renderMixedTensesSection() {
             }"
           >
             <i data-lucide="${isCopied ? 'check' : 'copy'}" class="w-3.5 h-3.5"></i>
-            <span>${isCopied ? 'Copied' : 'Copy Prompt'}</span>
+            <span>${isCopied ? '✅ Copied' : 'Copy Prompt'}</span>
           </button>
           <button
             data-ws-name="${ws.name}" data-ws-focus="${ws.focus}" data-asset-idx="${i}"
@@ -745,6 +841,7 @@ function renderTenseCards() {
         showToast(`Copied ${promptType.toUpperCase()} ${assetIdx + 1} prompt for ${classLabel}! 📋✅`);
         renderTenseCards();
         renderOverviewStats();
+        renderClassSelector();
       });
     };
   });
@@ -779,6 +876,7 @@ function renderTenseCards() {
         showToast(`Copied ${wsName} prompt for ${classLabel}! 📋✅`);
         renderTenseCards();
         renderOverviewStats();
+        renderClassSelector();
       });
     };
   });
@@ -796,7 +894,7 @@ function renderTenseCards() {
     };
   });
 
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // --- Quick Navigation Pills ---
@@ -811,7 +909,6 @@ function renderQuickNav() {
     { id: 'future', label: 'Future', color: TENSE_COLORS.future },
   ];
 
-  // Only render links if the active card categories contain them
   const cardsData = LEVEL_CARDS_DATA[selectedClassLevel] || [];
   const activeKeys = new Set(cardsData.map(c => c.category));
 
@@ -837,10 +934,11 @@ function renderOverviewStats() {
   const cardsData = LEVEL_CARDS_DATA[selectedClassLevel] || [];
   const mixedWorksheets = MIXED_WS_DATA[selectedClassLevel] || [];
 
-  // Calculate tense card assets
+  // Calculate card-specific assets
   cardsData.forEach(card => {
-    const chartsCount = card.chartsCount || 1;
-    const worksheetsCount = card.worksheetsCount || 1;
+    const counts = ASSET_COUNTS[selectedClassLevel] || { charts: 1, worksheets: 1 };
+    const chartsCount = card.chartsCount || counts.charts || 1;
+    const worksheetsCount = card.worksheetsCount || counts.worksheets || 1;
     totalAssets += chartsCount + worksheetsCount;
 
     for (let i = 0; i < chartsCount; i++) {
@@ -935,10 +1033,14 @@ function renderPromptPanel() {
   if (!card) return;
 
   const classLabel = getCurrentClassLabel();
-  const activeCount = panelAssetType === 'chart' ? card.chartsCount : card.worksheetsCount;
+  const counts = ASSET_COUNTS[selectedClassLevel] || { charts: 1, worksheets: 1 };
+  const activeCount = panelAssetType === 'chart' 
+    ? (card.chartsCount || counts.charts || 1) 
+    : (card.worksheetsCount || counts.worksheets || 1);
 
   const promptObj = generateTensePrompt(panelTenseId, card.name, panelCategory, panelAssetType, classLabel, panelAssetIndex, activeCount, card.focuses);
   const simplifiedObj = {
+    filename: promptObj.filename,
     image_generation_prompt: promptObj.image_generation_prompt,
     negative_prompt: promptObj.negative_prompt,
   };
@@ -969,7 +1071,7 @@ function renderPromptPanel() {
     <div id="panel-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"></div>
 
     <!-- Drawer Content -->
-    <div class="fixed right-0 top-0 bottom-0 w-full md:max-w-2xl bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col transition-all duration-300">
+    <div class="fixed right-0 top-0 bottom-0 w-full md:max-w-2xl glass-drawer border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl z-50 flex flex-col transition-all duration-300">
 
       <!-- Header -->
       <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/50 bg-slate-50/40 dark:bg-slate-900/20 flex-shrink-0">
@@ -1061,7 +1163,7 @@ function renderPromptPanel() {
 
       <!-- Footer -->
       ${isCopied ? `
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-white dark:bg-slate-950 flex-shrink-0">
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-white dark:bg-slate-955 flex-shrink-0">
           <button id="panel-reset-checkmark-btn" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-rose-500/10 hover:border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             <span>Reset Checkmark</span>
@@ -1101,10 +1203,10 @@ function renderPromptPanel() {
     const btn = document.getElementById('panel-copy-filename-btn');
     navigator.clipboard.writeText(promptObj.filename).then(() => {
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Name</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
     });
   };
@@ -1117,6 +1219,7 @@ function renderPromptPanel() {
       renderPromptPanel();
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     });
   };
 
@@ -1126,10 +1229,10 @@ function renderPromptPanel() {
     navigator.clipboard.writeText(promptObj.negative_prompt).then(() => {
       showToast('Copied negative prompt! 📋');
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Negative Prompt</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
     });
   };
@@ -1142,14 +1245,15 @@ function renderPromptPanel() {
       setTenseCopiedStatus(panelTenseId, panelAssetType, classLabel, panelAssetIndex, true);
       showToast('Copied all prompts! 📋✅');
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy-plus" class="w-3.5 h-3.5"></i><span>Copy All</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
       renderPromptPanel();
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     });
   };
 
@@ -1162,19 +1266,11 @@ function renderPromptPanel() {
       renderPromptPanel();
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     };
   }
 
-  // ESC key
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      closePromptPanel();
-      window.removeEventListener('keydown', escHandler);
-    }
-  };
-  window.addEventListener('keydown', escHandler);
-
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, totalAssets) {
@@ -1183,6 +1279,7 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
 
   const promptObj = generateMixedTensesPrompt(classLabel, wsName, assetIdx, totalAssets, wsFocus);
   const simplifiedObj = {
+    filename: promptObj.filename,
     image_generation_prompt: promptObj.image_generation_prompt,
     negative_prompt: promptObj.negative_prompt,
   };
@@ -1216,7 +1313,7 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
     <div id="panel-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"></div>
 
     <!-- Drawer Content -->
-    <div class="fixed right-0 top-0 bottom-0 w-full md:max-w-2xl bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col transition-all duration-300">
+    <div class="fixed right-0 top-0 bottom-0 w-full md:max-w-2xl glass-drawer border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl z-50 flex flex-col transition-all duration-300">
 
       <!-- Header -->
       <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/50 bg-slate-50/40 dark:bg-slate-900/20 flex-shrink-0">
@@ -1273,7 +1370,7 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
               class="p-1.5 rounded-lg border transition-colors ${
                 isCopied
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
-                  : 'border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-905 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
               }"
               title="Copy Image Prompt"
             >
@@ -1298,7 +1395,7 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
 
       <!-- Footer -->
       ${isCopied ? `
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-white dark:bg-slate-950 flex-shrink-0">
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-white dark:bg-slate-955 flex-shrink-0">
           <button id="panel-reset-checkmark-btn" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-rose-500/10 hover:border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             <span>Reset Checkmark</span>
@@ -1328,10 +1425,10 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
     const btn = document.getElementById('panel-copy-filename-btn');
     navigator.clipboard.writeText(promptObj.filename).then(() => {
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Name</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
     });
   };
@@ -1344,6 +1441,7 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
       renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, totalAssets);
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     });
   };
 
@@ -1353,10 +1451,10 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
     navigator.clipboard.writeText(promptObj.negative_prompt).then(() => {
       showToast('Copied negative prompt! 📋');
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Negative Prompt</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
     });
   };
@@ -1369,14 +1467,15 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
       setMixedCopiedStatus(classLabel, assetIdx, true);
       showToast('Copied all prompts! 📋✅');
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
         btn.innerHTML = '<i data-lucide="copy-plus" class="w-3.5 h-3.5"></i><span>Copy All</span>';
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 1500);
       renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, totalAssets);
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     });
   };
 
@@ -1389,19 +1488,11 @@ function renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, to
       renderMixedPromptPanelContent(classLabel, wsName, wsFocus, assetIdx, totalAssets);
       renderTenseCards();
       renderOverviewStats();
+      renderClassSelector();
     };
   }
 
-  // ESC key
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      closePromptPanel();
-      window.removeEventListener('keydown', escHandler);
-    }
-  };
-  window.addEventListener('keydown', escHandler);
-
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ============================================================
@@ -1423,8 +1514,19 @@ function init() {
     };
   }
 
-  lucide.createIcons();
+  // Global ESC key listener to close drawer panel safely without leaks
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panelOpen) {
+      closePromptPanel();
+    }
+  });
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// Start
-document.addEventListener('DOMContentLoaded', init);
+// Robust Dom Ready Init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

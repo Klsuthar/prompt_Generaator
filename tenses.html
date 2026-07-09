@@ -4,14 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Theme Flash Prevention -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('vidyaframe_theme') || 'dark';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+    
     <!-- SEO Meta Tags -->
-    <title>English Tenses — Complete Guide | VidyaFrame Learning</title>
-    <meta name="description" content="Master all 12 English tenses with class-wise progressive learning. From Class 4 to Class 10 — definitions, formulas, examples, worksheets, and more." />
+    <title>English Tenses Prompt Studio | VidyaFrame Learning</title>
+    <meta name="description" content="Generate high-quality prompts for English Tenses charts and worksheets. Elegant dark blue typography on white backgrounds, tailored class-wise." />
     
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS (v3) CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,220 +32,244 @@
         darkMode: 'class',
         theme: {
           extend: {
+            colors: {
+              slate: {
+                850: '#1e293b',
+                955: '#0b0f19',
+              }
+            },
             fontFamily: {
               sans: ['Outfit', 'sans-serif'],
             },
             animation: {
-              fadeIn: 'fadeIn 0.5s ease-out',
-              slideUp: 'slideUp 0.5s ease-out',
-              float: 'float 6s ease-in-out infinite',
-              glow: 'glow 2s ease-in-out infinite alternate',
+              fadeIn: 'fadeIn 0.4s ease-out forwards',
+              slideUp: 'slideUp 0.4s ease-out forwards',
+              pulseSlow: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '0%': { opacity: '0', transform: 'translateY(8px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               slideUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '0%': { opacity: '0', transform: 'translateY(16px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              float: {
-                '0%, 100%': { transform: 'translateY(0px)' },
-                '50%': { transform: 'translateY(-10px)' },
-              },
-              glow: {
-                '0%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.1)' },
-                '100%': { boxShadow: '0 0 40px rgba(99, 102, 241, 0.2)' },
-              },
+              }
             },
           }
         }
       }
     </script>
 
-    <!-- Custom CSS -->
+    <!-- Custom Premium Styles -->
     <style type="text/css">
-      /* Scrollbars */
+      /* Custom scrollbar styling */
       ::-webkit-scrollbar { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      .dark ::-webkit-scrollbar-track { background: #0f172a; }
+      .dark ::-webkit-scrollbar-track { background: #0b0f19; }
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-      .dark ::-webkit-scrollbar-thumb { background: #334155; }
+      .dark ::-webkit-scrollbar-thumb { background: #1e293b; }
       ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+      .dark ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
-      /* Smooth scrolling */
       html { scroll-behavior: smooth; }
 
-      /* Animated gradient text */
-      .gradient-text {
-        background: linear-gradient(135deg, #6366f1, #3b82f6, #06b6d4, #10b981, #f59e0b, #ef4444);
-        background-size: 300% 300%;
+      /* Gradient Text */
+      .premium-gradient {
+        background: linear-gradient(135deg, #3b82f6, #6366f1, #d946ef);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        animation: gradientShift 8s ease infinite;
       }
 
-      @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+      /* Frosted Glass Cards */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .dark .glass-card {
+        background: rgba(15, 23, 42, 0.65);
       }
 
-      /* Animated background orbs */
-      .bg-orb {
+      /* Hover effects */
+      .tense-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .tense-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.15);
+      }
+      .dark .tense-card:hover {
+        box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.3);
+      }
+
+      /* Decorative background blobs */
+      .glow-blob {
         position: absolute;
         border-radius: 9999px;
-        filter: blur(80px);
+        filter: blur(100px);
         opacity: 0.15;
-        animation: float 8s ease-in-out infinite;
         pointer-events: none;
+        z-index: 0;
       }
-      .dark .bg-orb { opacity: 0.08; }
+      .dark .glow-blob { opacity: 0.08; }
 
-      /* Card hover lift */
-      .tense-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-      .tense-card:hover { transform: translateY(-2px); }
-
-      /* Print styles */
-      @media print {
-        body { background: white !important; color: black !important; }
-        .no-print { display: none !important; }
-        .print-only { display: block !important; }
-        .tense-card { break-inside: avoid; }
-      }
-
-      /* Hero pattern */
-      .hero-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.08) 1px, transparent 0);
+      /* Grid background */
+      .grid-bg {
         background-size: 32px 32px;
+        background-image: 
+          linear-gradient(to right, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
       }
-      .dark .hero-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.15) 1px, transparent 0);
+      .dark .grid-bg {
+        background-image: 
+          linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+      }
+
+      /* Blob float animations */
+      @keyframes float-blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.08); }
+        66% { transform: translate(-20px, 20px) scale(0.95); }
+        100% { transform: translate(0px, 0px) scale(1); }
+      }
+      .animate-float {
+        animation: float-blob 20s infinite ease-in-out;
+      }
+      .animate-float-delayed {
+        animation: float-blob 25s infinite ease-in-out;
+        animation-delay: 5s;
+      }
+      .animate-float-slow {
+        animation: float-blob 30s infinite ease-in-out;
+        animation-delay: 10s;
+      }
+
+      /* Frosted glass drawer styling */
+      .glass-drawer {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .dark .glass-drawer {
+        background: rgba(8, 13, 28, 0.85);
+      }
+
+      @media print {
+        .no-print { display: none !important; }
       }
     </style>
   </head>
 
-  <body class="transition-colors duration-200 antialiased font-sans bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500/20">
+  <body class="transition-colors duration-300 antialiased font-sans bg-slate-50 text-slate-800 dark:bg-slate-955 dark:text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500/20 grid-bg">
     
+    <!-- Decorative Ambient Orbs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      <div class="glow-blob w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-650/4 -top-40 -left-40 animate-float"></div>
+      <div class="glow-blob w-[450px] h-[450px] bg-purple-500/10 dark:bg-purple-650/4 top-1/3 right-10 animate-float-delayed"></div>
+      <div class="glow-blob w-[350px] h-[350px] bg-emerald-500/8 dark:bg-emerald-650/3 bottom-10 left-1/4 animate-float-slow"></div>
+    </div>
+
     <!-- ===== HEADER ===== -->
-    <header id="app-header" class="w-full py-4 px-4 sm:px-6 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md sticky top-0 z-40 no-print">
+    <header id="app-header" class="w-full py-4 px-4 sm:px-6 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md sticky top-0 z-45 no-print">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
+        
+        <!-- Logo and Brand -->
         <div class="flex items-center gap-3">
-          <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors group" title="Back to VidyaFrame Prompt Studio">
+          <a href="index.html" class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 transition-all group" title="Back to Prompt Studio">
             <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"></i>
           </a>
           <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 shadow-md shadow-indigo-500/20 text-white">
-            <i data-lucide="book-open-text" class="w-5 h-5"></i>
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
           </div>
           <div>
-            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
-              English Tenses
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-950 dark:text-white leading-tight">
+              Tenses Prompt Studio
             </h1>
-            <p class="text-[10px] sm:text-xs font-semibold text-slate-400">VidyaFrame Learning · Complete Guide</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VidyaFrame Learning</p>
           </div>
         </div>
+
+        <!-- Header Actions -->
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Quick Nav Pills (desktop) -->
-          <div id="quick-nav" class="hidden sm:flex items-center gap-1.5 no-print">
+          <div id="quick-nav" class="hidden sm:flex items-center gap-1.5">
             <!-- Injected by tenses.js -->
           </div>
-          <button id="theme-toggle-btn" class="p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-200 no-print">
+          <button id="theme-toggle-btn" class="p-2.5 rounded-xl border border-slate-200/65 dark:border-slate-800/65 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-all duration-200">
             <i data-lucide="sun" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <main class="flex-grow w-full max-w-6xl mx-auto px-4 py-6 sm:px-6">
+    <!-- ===== MAIN CONTENT AREA ===== -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 py-8 sm:px-6 z-10 relative">
 
-      <!-- HERO SECTION -->
-      <section class="relative overflow-hidden rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md mb-8 p-8 sm:p-12 hero-pattern">
-        <!-- Background Orbs -->
-        <div class="bg-orb w-72 h-72 bg-blue-500 -top-20 -left-20" style="animation-delay: 0s;"></div>
-        <div class="bg-orb w-64 h-64 bg-emerald-500 -bottom-16 -right-16" style="animation-delay: 2s;"></div>
-        <div class="bg-orb w-48 h-48 bg-amber-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="animation-delay: 4s;"></div>
-
-        <div class="relative z-10 text-center max-w-3xl mx-auto">
+      <!-- HERO BANNER -->
+      <section class="relative overflow-hidden rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md mb-8 p-6 sm:p-10 shadow-sm">
+        <div class="relative z-10 text-center max-w-2xl mx-auto">
+          
           <!-- Badge -->
-          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-6 animate-fadeIn">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-500/15 border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider mb-5 animate-fadeIn">
             <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
-            <span>Class 4 to Class 10 · Progressive Learning</span>
+            <span>Interactive Prompt Copier · Class 4 to 10</span>
           </div>
 
-          <!-- Title -->
-          <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-4 animate-slideUp">
-            <span class="gradient-text">Master All 12</span>
+          <!-- Hero Title -->
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-none mb-3 animate-slideUp">
+            <span class="premium-gradient">English Tenses</span>
             <br>
-            <span class="text-slate-900 dark:text-white">English Tenses</span>
+            <span class="text-slate-900 dark:text-white text-2xl sm:text-3xl font-extrabold">Infographics & Sheets</span>
           </h1>
 
-          <!-- Subtitle -->
-          <p class="text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-8 animate-fadeIn max-w-xl mx-auto" style="animation-delay: 0.2s;">
-            From simple definitions to advanced transformations — learn every tense at your own pace, with interactive examples and printable worksheets.
+          <!-- Hero Subtitle -->
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto leading-relaxed animate-fadeIn" style="animation-delay: 0.15s;">
+            Easily copy programmatically customized Midjourney/DALL-E image generation prompts. Designed with crisp dark blue text on pure white backgrounds.
           </p>
 
-          <!-- Stats Overview -->
-          <div id="tense-stats" class="animate-fadeIn max-w-lg mx-auto" style="animation-delay: 0.4s;">
+          <!-- Stats Progress Bar -->
+          <div id="tense-stats" class="animate-fadeIn" style="animation-delay: 0.3s;">
             <!-- Injected by tenses.js -->
           </div>
+
         </div>
       </section>
 
-      <!-- CLASS LEVEL SELECTOR -->
-      <section class="mb-8 no-print">
+      <!-- TAB SELECTION -->
+      <section class="mb-8 no-print animate-fadeIn" style="animation-delay: 0.1s;">
         <div class="flex items-center justify-between mb-4 px-1">
           <div class="flex items-center gap-2">
-            <i data-lucide="layers" class="w-5 h-5 text-indigo-500"></i>
-            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Select Your Class Level</h2>
+            <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-500"></i>
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Select Class Level</h2>
           </div>
         </div>
-        <div id="class-selector" class="flex flex-wrap gap-2 sm:gap-3 justify-center p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <div id="class-selector" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white/30 dark:bg-slate-900/30 backdrop-blur-md w-full">
           <!-- Injected by tenses.js -->
         </div>
-        <p class="text-center text-xs text-slate-400 mt-3">
-          💡 <strong>Tip:</strong> Content builds progressively — higher classes include everything from lower classes plus more.
-        </p>
       </section>
 
-      <!-- Mobile Quick Nav -->
-      <div class="sm:hidden flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-print" id="quick-nav-mobile">
-        <a href="#section-present" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold">
-          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Present
-        </a>
-        <a href="#section-past" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Past
-        </a>
-        <a href="#section-future" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Future
-        </a>
-      </div>
-
-      <!-- TENSE CONTENT AREA -->
+      <!-- TENSE CONTENT (CARDS GRID) -->
       <div id="tense-main-content">
-        <!-- All tense cards and worksheets rendered here by tenses.js -->
-        <div class="text-center py-16">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 mb-4 animate-pulse">
-            <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
+        <div class="text-center py-20">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-505 mb-4 animate-pulse">
+            <i data-lucide="loader" class="w-6 h-6 animate-spin"></i>
           </div>
-          <p class="text-sm text-slate-400 font-semibold">Loading tenses...</p>
+          <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Initialising Studio...</p>
         </div>
       </div>
 
     </main>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="w-full py-8 px-6 border-t border-slate-200/50 dark:border-slate-800/50 bg-white/30 dark:bg-slate-950/30 backdrop-blur-sm mt-8 no-print">
+    <footer class="w-full py-8 px-6 border-t border-slate-200/50 dark:border-slate-800/50 bg-white/20 dark:bg-slate-950/20 backdrop-blur-sm mt-12 no-print">
       <div class="max-w-6xl mx-auto text-center">
-        <div class="flex items-center justify-center gap-2 mb-3">
-          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white text-xs font-bold">V</div>
-          <span class="text-sm font-bold text-slate-700 dark:text-slate-300">VidyaFrame Learning</span>
+        <div class="flex items-center justify-center gap-2 mb-2">
+          <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-650 flex items-center justify-center text-white text-[11px] font-black">V</div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350">VidyaFrame Learning</span>
         </div>
-        <p class="text-xs text-slate-400">Complete English Grammar · Tenses Reference Guide</p>
-        <p class="text-[10px] text-slate-400/60 mt-2">Built with ❤️ for students of Class 4 to Class 10</p>
+        <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Tenses Reference Guide & Prompt Studio</p>
       </div>
     </footer>
 
