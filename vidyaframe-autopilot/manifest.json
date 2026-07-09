@@ -14,8 +14,8 @@
   ],
   
   "host_permissions": [
-    "https://chatgpt.com/*",
-    "https://chat.openai.com/*",
+    "https://*.chatgpt.com/*",
+    "https://*.chat.openai.com/*",
     "http://localhost:*/*",
     "http://127.0.0.1:*/*",
     "file:///*",
@@ -62,8 +62,8 @@
     },
     {
       "matches": [
-        "https://chatgpt.com/*",
-        "https://chat.openai.com/*"
+        "https://*.chatgpt.com/*",
+        "https://*.chat.openai.com/*"
       ],
       "js": ["lib/constants.js", "lib/generation-detector.js", "content-scripts/chatgpt-agent.js"],
       "css": ["content-scripts/chatgpt-agent.css"],

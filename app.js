@@ -215,6 +215,10 @@ function renderHeader() {
         </div>
       </div>
       <div class="flex items-center gap-3 self-end sm:self-center">
+        <a href="tenses.html" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-indigo-500/10 hover:border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium text-sm transition-all duration-200">
+          <i data-lucide="book-open-text" class="w-3.5 h-3.5"></i>
+          <span>English Tenses</span>
+        </a>
         <button id="theme-toggle-btn" class="p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-200">
           <i data-lucide="${theme === 'dark' ? 'sun' : 'moon'}" class="w-4 h-4"></i>
         </button>
