@@ -193,15 +193,15 @@ function generateTensePrompt(tenseId, tenseName, category, assetType, classStr) 
       ? '3x2 or 4x2 neatly structured grid, each cell containing a titled mini-card with formula, label, and key info — separated by thin subtle lines'
       : 'central detailed diagram with labeled sections, supplementary info boxes, clean header title bar at top';
 
-    imagePrompt = `Create a high-quality educational wall chart titled '${tenseName}'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students (DO NOT print class name on the image). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content: ${contentDepth} Typography: use clean bold sans-serif headings ('${tenseName}' as the main title) and legible body text. The chart heading should be prominent, clean, and elegant — not overly decorative. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
+    imagePrompt = `Create a high-quality educational wall chart titled '${tenseName}'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students. CRITICAL: Do NOT write, print, or include any class tag, grade label, age group, or level text (such as "Class ${classLevel}", "Grade ${classLevel}", "Class 4", "Class 5", etc.) anywhere on the chart design. The chart must contain ONLY the grammar rules, title, formulas, and examples. Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content: ${contentDepth} Typography: use clean bold sans-serif headings ('${tenseName}' as the main title) and legible body text. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   } else {
     const sections = getWorksheetSections(classLevel, 0);
     const sectionList = sections.map((s, i) => `Section ${i + 1}: ${s}`).join('. ');
 
-    imagePrompt = `Create a print-ready educational worksheet titled '${tenseName} — Worksheet'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students (DO NOT print class name on the worksheet). Art style: ${style}. Color palette: ${colorPalette}. Topic focus: '${tenseName}' — all questions must test different aspects and skills of this tense including identification, usage, transformation, and error correction. IMPORTANT: The worksheet MUST have exactly ${sections.length} clearly separated sections, each using a COMPLETELY DIFFERENT question format. The sections are: ${sectionList}. Every section must have its own bold section heading (e.g., "A. Fill in the Blanks", "B. Transform the Sentences"). DO NOT repeat the same question type across sections. Include generous blank answer spaces (lines, boxes, circles) for student responses. Typography: clean sans-serif for instructions, clear numbered questions. The worksheet heading should be clean and simple — '${tenseName} — Worksheet'. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
+    imagePrompt = `Create a print-ready educational worksheet titled '${tenseName} — Worksheet'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students. CRITICAL: Do NOT write, print, or include any class tag, grade label, age group, or level text (such as "Class ${classLevel}", "Grade ${classLevel}", "Class 4", "Class 5", etc.) anywhere on the worksheet design. The worksheet must contain ONLY the grammar questions, title, instructions, and workspace. Art style: ${style}. Color palette: ${colorPalette}. Topic focus: '${tenseName}' — all questions must test different aspects and skills of this tense including identification, usage, transformation, and error correction. IMPORTANT: The worksheet MUST have exactly ${sections.length} clearly separated sections, each using a COMPLETELY DIFFERENT question format. The sections are: ${sectionList}. Every section must have its own bold section heading (e.g., "A. Fill in the Blanks", "B. Transform the Sentences"). DO NOT repeat the same question type across sections. Include generous blank answer spaces (lines, boxes, circles) for student responses. Typography: clean sans-serif for instructions, clear numbered questions. The worksheet heading should be clean and simple — '${tenseName} — Worksheet'. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
   }
 
-  const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified, word search puzzle, repetitive question format, all same question type';
+  const negativePrompt = 'class labels, grade labels, age labels, class tags, grade tags, level tags, level badges, class indicators, grade indicators, borders, frames, outlines, margins, padding, decorative borders, watermarks, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified, word search puzzle, repetitive question format, all same question type';
 
   return {
     filename: filename,
@@ -1561,6 +1561,7 @@ function renderFormulaBox(content, colors) {
 function renderTenseCard(tense, category, colors) {
   const content = getContentForLevel(tense, selectedClassLevel);
   const isExpanded = expandedTense === tense.id;
+  const allClasses = getAllClassesForTense();
 
   // Build card sections based on accumulated content
   let detailSections = '';
@@ -1755,7 +1756,15 @@ function renderTenseCard(tense, category, colors) {
           </div>
           <div class="min-w-0">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">${tense.name}</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${content.definition}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-1">
+                <i data-lucide="clipboard-list" class="w-3 h-3 text-blue-500"></i> ${allClasses.length} Charts
+              </span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-1">
+                <i data-lucide="file-spreadsheet" class="w-3 h-3 text-purple-500"></i> ${allClasses.length} Worksheets
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">${content.definition}</p>
           </div>
         </div>
         <i data-lucide="chevron-down" class="w-5 h-5 ${colors.icon} transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}"></i>
