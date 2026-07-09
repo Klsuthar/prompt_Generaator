@@ -9,6 +9,211 @@ let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
 let selectedClassLevel = 'class4-5';
 let expandedTense = null;
 
+// --- Panel State ---
+let panelOpen = false;
+let panelTenseId = null;
+let panelCategory = null;
+let panelAssetType = 'chart'; // 'chart' or 'worksheet'
+let panelClassIndex = 0;
+
+// --- Copy Tracking (localStorage) ---
+const TENSE_COPIED_PREFIX = 'vidyaframe_tense_copied_';
+
+function getTenseCopiedStatus(tenseId, assetType, classLevel) {
+  return localStorage.getItem(`${TENSE_COPIED_PREFIX}${tenseId}_${assetType}_${classLevel}`) === 'true';
+}
+
+function setTenseCopiedStatus(tenseId, assetType, classLevel, value) {
+  const key = `${TENSE_COPIED_PREFIX}${tenseId}_${assetType}_${classLevel}`;
+  if (value) {
+    localStorage.setItem(key, 'true');
+  } else {
+    localStorage.removeItem(key);
+  }
+}
+
+// --- Syntax Highlighting for JSON ---
+function syntaxHighlightJson(jsonObj) {
+  const jsonStr = JSON.stringify(jsonObj, null, 2);
+  let escaped = jsonStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escaped.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+    let cls = 'text-amber-650 dark:text-amber-500';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'text-indigo-650 dark:text-indigo-400 font-semibold';
+      } else {
+        cls = 'text-emerald-650 dark:text-emerald-400';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = 'text-violet-650 dark:text-violet-500';
+    } else if (/null/.test(match)) {
+      cls = 'text-rose-650 dark:text-rose-500';
+    }
+    return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+// --- Toast ---
+let toastTimer = null;
+function showToast(message) {
+  const toastNode = document.getElementById('app-toast');
+  if (!toastNode) return;
+  toastNode.innerHTML = `
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-emerald-500/20 bg-white dark:bg-slate-900 shadow-xl shadow-emerald-500/5">
+      <div class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500">
+        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+      </div>
+      <p class="text-sm font-medium text-slate-800 dark:text-slate-200">${message}</p>
+    </div>
+  `;
+  toastNode.classList.remove('hidden');
+  lucide.createIcons();
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastNode.classList.add('hidden'); }, 2000);
+}
+
+// ============================================================
+// PROMPT GENERATION ENGINE (same style as main app)
+// ============================================================
+
+// Class mapping for tense page
+const TENSE_CLASS_MAP = {
+  'class4-5': ['Class 4', 'Class 5'],
+  'class6': ['Class 6'],
+  'class8': ['Class 8'],
+  'class9': ['Class 9'],
+  'class10': ['Class 10'],
+};
+
+function getAllClassesForTense() {
+  // Returns all classes for the currently selected level and below
+  const allLevelIds = ['class4-5', 'class6', 'class8', 'class9', 'class10'];
+  const levelIndex = allLevelIds.indexOf(selectedClassLevel);
+  let classes = [];
+  for (let i = 0; i <= levelIndex; i++) {
+    classes = classes.concat(TENSE_CLASS_MAP[allLevelIds[i]]);
+  }
+  return classes;
+}
+
+function getClassesForCurrentLevel() {
+  return TENSE_CLASS_MAP[selectedClassLevel] || ['Class 4'];
+}
+
+function getClassLevelNum(classStr) {
+  const match = classStr.match(/\d+/);
+  return match ? parseInt(match[0]) : 4;
+}
+
+function getStyleForClass(level) {
+  if (level <= 0) return 'adorable kawaii-style flat vector illustration with rounded shapes and cheerful expressions — suitable for toddlers';
+  if (level <= 2) return 'bright, friendly semi-cartoon clean vector illustration with bold outlines and soft shadows — age 5-7 appropriate';
+  if (level <= 4) return 'clean, polished illustrated academic infographic style with labeled diagrams and clear hierarchy';
+  if (level <= 6) return 'semi-realistic flat academic illustration with structured diagrams and data visualization';
+  return 'clean professional academic diagram style with precise technical illustrations';
+}
+
+function getColorPalette() {
+  return 'rich violet (#8B5CF6) primary, lavender accents, cream highlights';
+}
+
+function slugify(text) {
+  return text.toString().toLowerCase().trim()
+    .replace(/[\s\/_]+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
+}
+
+// Worksheet section pools (same as main app promptGenerator.js)
+const WS_SECTIONS_PRIMARY = [
+  'Fill in the blanks: sentences with missing words, with a word bank provided at the top',
+  'Match the columns: Column A and Column B with items to connect using lines or arrows',
+  'True or False: 5-6 statements where student writes T or F in the box next to each',
+  'Short answer questions: 3-4 questions with 2-line answer spaces below each',
+  'Circle the correct answer: multiple-choice with 3 options per question',
+  'Arrange in order: jumbled words to form correct sentences',
+  'Complete the table: a partially filled table with verb forms to fill in',
+  'Odd one out: rows of 4-5 sentences where student crosses out the incorrect one',
+  'Rewrite the sentence: given sentence to rewrite in a different tense form',
+  'Look and answer: a short paragraph followed by 3-4 comprehension questions',
+];
+
+const WS_SECTIONS_UPPER = [
+  'Multiple choice questions (MCQ): 4-5 questions with options A, B, C, D and answer circles',
+  'Fill in the blanks: sentences with key verb forms missing (no word bank — recall-based)',
+  'Match the following: two columns of sentences and their tense names to connect',
+  'True or False with correction: statements where student marks T/F and corrects false ones',
+  'Transform the sentences: change affirmative to negative, interrogative, or different tense',
+  'Short answer questions: 4-5 conceptual questions about tense usage with answer spaces',
+  'Error correction: sentences with grammatical errors that student identifies and corrects',
+  'Complete the table/chart: verb conjugation table with some cells blank to fill in',
+  'Paragraph completion: a paragraph with blanks where student fills correct verb tense forms',
+  'Define and give examples: key tense terms with blank lines for definitions and example sentences',
+  'Identify the tense: 6-8 sentences where student identifies and writes the tense name',
+  'Sentence formation: jumbled words to arrange into correct sentences using the specified tense',
+];
+
+function getWorksheetSections(level, index) {
+  const pool = level <= 5 ? WS_SECTIONS_PRIMARY : WS_SECTIONS_UPPER;
+  const count = level <= 5 ? 4 : 5;
+  const offset = (index * 3) % pool.length;
+  const sections = [];
+  for (let i = 0; i < count; i++) {
+    sections.push(pool[(offset + i) % pool.length]);
+  }
+  return sections;
+}
+
+// Generate prompt for a tense chart or worksheet
+function generateTensePrompt(tenseId, tenseName, category, assetType, classStr) {
+  const classLevel = getClassLevelNum(classStr);
+  const style = getStyleForClass(classLevel);
+  const colorPalette = getColorPalette();
+  const cleanClass = classStr.toLowerCase().replace(/\s+/g, '-');
+  const tenseSlug = slugify(tenseName);
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+
+  // Content description based on class level
+  let contentDepth = '';
+  if (classLevel <= 5) {
+    contentDepth = `Basic introduction showing: tense name, simple one-line definition, formula structure (Subject + Verb form + Object) for affirmative, negative, and interrogative forms. Use large clear text and simple visual layout.`;
+  } else if (classLevel <= 6) {
+    contentDepth = `Intermediate level showing: tense name, definition, formula for all three forms (affirmative, negative, interrogative), when to use this tense (3-4 usage points), and signal/clue words. Include a small visual icon or illustration.`;
+  } else if (classLevel <= 8) {
+    contentDepth = `Detailed level showing: tense name, definition, formula, when to use, signal words, AND a clear examples table with 3-4 example sentences in affirmative, negative, and interrogative forms. Include grammar rule note.`;
+  } else {
+    contentDepth = `Advanced comprehensive level showing: tense name, definition, formula, when to use, signal words, examples table (affirmative/negative/interrogative), common mistakes with corrections, advanced usage examples, and detailed grammar rules. Dense but well-organized layout.`;
+  }
+
+  let imagePrompt = '';
+  const filename = `${cleanClass}-english-${tenseSlug}-${assetType}`;
+
+  if (assetType === 'chart') {
+    const layout = classLevel <= 5
+      ? '3x2 or 4x2 neatly structured grid, each cell containing a titled mini-card with formula, label, and key info — separated by thin subtle lines'
+      : 'central detailed diagram with labeled sections, supplementary info boxes, clean header title bar at top';
+
+    imagePrompt = `Create a high-quality educational wall chart titled '${tenseName}'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students (DO NOT print class name on the image). Art style: ${style}. Color palette: ${colorPalette}. Layout: ${layout}. Content: ${contentDepth} Typography: use clean bold sans-serif headings ('${tenseName}' as the main title) and legible body text. The chart heading should be prominent, clean, and elegant — not overly decorative. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
+  } else {
+    const sections = getWorksheetSections(classLevel, 0);
+    const sectionList = sections.map((s, i) => `Section ${i + 1}: ${s}`).join('. ');
+
+    imagePrompt = `Create a print-ready educational worksheet titled '${tenseName} — Worksheet'. Subject: English Grammar — ${categoryLabel} Tense. Target audience: ${classStr} students (DO NOT print class name on the worksheet). Art style: ${style}. Color palette: ${colorPalette}. Topic focus: '${tenseName}' — all questions must test different aspects and skills of this tense including identification, usage, transformation, and error correction. IMPORTANT: The worksheet MUST have exactly ${sections.length} clearly separated sections, each using a COMPLETELY DIFFERENT question format. The sections are: ${sectionList}. Every section must have its own bold section heading (e.g., "A. Fill in the Blanks", "B. Transform the Sentences"). DO NOT repeat the same question type across sections. Include generous blank answer spaces (lines, boxes, circles) for student responses. Typography: clean sans-serif for instructions, clear numbered questions. The worksheet heading should be clean and simple — '${tenseName} — Worksheet'. Design rules: STRICT edge-to-edge layout with ZERO margin, ZERO padding, ZERO border, ZERO frame. Pure white background (#FFFFFF). The content must fill the entire canvas from edge to edge. No watermarks, no decorative borders. Print-ready at 300dpi, A4 portrait orientation.`;
+  }
+
+  const negativePrompt = 'borders, frames, outlines, margins, padding, decorative borders, watermarks, class labels, grade labels, dark backgrounds, overlapping text, blurry text, distorted letters, cropped content, vignette, shadow borders, rounded corners frame, header bar, footer bar, page number, logo, brand name, stock photo style, photographic, 3D render unless specified, word search puzzle, repetitive question format, all same question type';
+
+  return {
+    filename: filename,
+    assigned_class: classStr,
+    tense_name: tenseName,
+    category: categoryLabel,
+    asset_type: assetType,
+    image_generation_prompt: imagePrompt,
+    negative_prompt: negativePrompt,
+  };
+}
+
 function applyTheme() {
   if (currentTheme === 'dark') {
     document.documentElement.classList.add('dark');
@@ -1559,6 +1764,29 @@ function renderTenseCard(tense, category, colors) {
         <div class="pt-5">
           ${detailSections}
         </div>
+
+        <!-- Prompt Generation Buttons -->
+        <div class="mt-6 pt-5 border-t border-dashed ${colors.border}">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 mb-3">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i> Generate Image Prompts
+          </h4>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              data-tense-id="${tense.id}" data-tense-name="${tense.name}" data-category="${category}" data-prompt-type="chart"
+              class="prompt-gen-btn flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold border transition-all duration-200 border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+            >
+              <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+              <span>Chart Prompts</span>
+            </button>
+            <button
+              data-tense-id="${tense.id}" data-tense-name="${tense.name}" data-category="${category}" data-prompt-type="worksheet"
+              class="prompt-gen-btn flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold border transition-all duration-200 border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
+            >
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <span>Worksheet Prompts</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -1680,6 +1908,18 @@ function renderTenseContent() {
         expandedTense = tenseId;
       }
       renderTenseContent();
+    };
+  });
+
+  // Bind prompt generation buttons
+  mainContent.querySelectorAll('.prompt-gen-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const tenseId = btn.getAttribute('data-tense-id');
+      const tenseName = btn.getAttribute('data-tense-name');
+      const category = btn.getAttribute('data-category');
+      const promptType = btn.getAttribute('data-prompt-type');
+      openPromptPanel(tenseId, tenseName, category, promptType);
     };
   });
 
@@ -1818,6 +2058,302 @@ function renderOverviewStats() {
       Currently viewing: <strong class="text-slate-600 dark:text-slate-300">${levelLabel}</strong> level content
     </p>
   `;
+}
+
+// ============================================================
+// PROMPT PANEL — Slide-in Drawer (same UX as main app)
+// ============================================================
+
+function openPromptPanel(tenseId, tenseName, category, assetType) {
+  panelOpen = true;
+  panelTenseId = tenseId;
+  panelCategory = category;
+  panelAssetType = assetType;
+  panelClassIndex = 0;
+
+  // Find the tense name from data
+  const panelNode = document.getElementById('prompt-panel');
+  if (panelNode) {
+    panelNode.classList.remove('translate-x-full');
+    panelNode.classList.add('translate-x-0');
+    document.body.classList.add('overflow-hidden');
+  }
+  renderPromptPanel();
+}
+
+function closePromptPanel() {
+  panelOpen = false;
+  const panelNode = document.getElementById('prompt-panel');
+  if (panelNode) {
+    panelNode.classList.remove('translate-x-0');
+    panelNode.classList.add('translate-x-full');
+    document.body.classList.remove('overflow-hidden');
+  }
+}
+
+function renderPromptPanel() {
+  if (!panelOpen || !panelTenseId) return;
+
+  const panelNode = document.getElementById('prompt-panel');
+  if (!panelNode) return;
+
+  // Get the tense data
+  let tenseName = '';
+  let tenseData = null;
+  for (const cat of ['present', 'past', 'future']) {
+    const found = TENSES_DATA[cat].tenses.find(t => t.id === panelTenseId);
+    if (found) {
+      tenseName = found.name;
+      tenseData = found;
+      break;
+    }
+  }
+  if (!tenseName) return;
+
+  // Get all classes for this tense level
+  const allClasses = getAllClassesForTense();
+  const currentClass = allClasses[panelClassIndex % allClasses.length];
+  const categoryLabel = panelCategory.charAt(0).toUpperCase() + panelCategory.slice(1);
+
+  // Generate the prompt
+  const promptObj = generateTensePrompt(panelTenseId, tenseName, panelCategory, panelAssetType, currentClass);
+  const simplifiedObj = {
+    image_generation_prompt: promptObj.image_generation_prompt,
+    negative_prompt: promptObj.negative_prompt,
+  };
+  const highlightedHtml = syntaxHighlightJson(simplifiedObj);
+  const isCopied = getTenseCopiedStatus(panelTenseId, panelAssetType, currentClass);
+
+  // Category colors
+  const catColors = TENSE_COLORS[panelCategory] || TENSE_COLORS.present;
+
+  // Sub-tabs for each class
+  const subTabsHtml = allClasses.map((cls, i) => {
+    const isAssetCopied = getTenseCopiedStatus(panelTenseId, panelAssetType, cls);
+    const isSelected = panelClassIndex === i;
+    return `
+      <button
+        data-class-idx="${i}"
+        class="panel-class-tab flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+          isSelected
+            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-300 shadow-sm'
+            : 'bg-white dark:bg-slate-900 border-slate-200/70 dark:border-slate-800/70 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+        }"
+      >
+        <span>${panelAssetType === 'chart' ? 'Chart' : 'Sheet'} (${cls})</span>
+        ${isAssetCopied ? '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i>' : ''}
+      </button>
+    `;
+  }).join('');
+
+  panelNode.innerHTML = `
+    <!-- Panel Dim Backdrop -->
+    <div id="panel-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"></div>
+
+    <!-- Drawer Content -->
+    <div class="fixed right-0 top-0 bottom-0 w-full md:max-w-2xl bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col transition-all duration-300">
+
+      <!-- Header -->
+      <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/50 bg-slate-50/40 dark:bg-slate-900/20 flex-shrink-0">
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${catColors.bg} ${catColors.text} ${catColors.border}">
+                ${categoryLabel} Tense
+              </span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase">
+                ${panelAssetType === 'chart' ? '📊 Chart' : '📝 Worksheet'}
+              </span>
+            </div>
+            <h2 class="text-lg font-bold text-slate-950 dark:text-white leading-tight">
+              ${tenseName}
+            </h2>
+          </div>
+          <button id="panel-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-100/50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-500 flex-shrink-0"></i>
+          <span>Generating for <strong class="text-slate-700 dark:text-slate-200">${allClasses.length} classes</strong> (${allClasses.join(', ')})</span>
+        </div>
+
+        <!-- Primary Type tabs -->
+        <div class="flex gap-1.5 mt-5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50">
+          <button id="panel-type-chart" class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-lg transition-all ${panelAssetType === 'chart' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}">
+            📊 Chart Prompts
+          </button>
+          <button id="panel-type-worksheet" class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-lg transition-all ${panelAssetType === 'worksheet' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}">
+            📝 Worksheet Prompts
+          </button>
+        </div>
+
+        <!-- Scrollable Sub-tabs -->
+        <div id="panel-sub-tabs" class="mt-4 flex gap-1.5 overflow-x-auto pb-1.5">
+          ${subTabsHtml}
+        </div>
+      </div>
+
+      <!-- Code Body -->
+      <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-950/40 flex flex-col gap-4">
+
+        <!-- Filename widget -->
+        <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div class="min-w-0 flex-1">
+            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Filename</span>
+            <code class="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono truncate block">${promptObj.filename}</code>
+          </div>
+          <button id="panel-copy-filename-btn" class="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy Name</span>
+          </button>
+        </div>
+
+        <!-- JSON viewport -->
+        <div class="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 shadow-inner flex-1 flex flex-col overflow-hidden">
+          <div class="absolute right-4 top-4 z-10">
+            <button
+              id="panel-copy-prompt-btn-top"
+              class="p-1.5 rounded-lg border transition-colors ${
+                isCopied
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
+              }"
+              title="Copy Image Prompt"
+            >
+              <i data-lucide="${isCopied ? 'check' : 'copy'}" class="w-4 h-4 ${isCopied ? 'text-emerald-500' : ''}"></i>
+            </button>
+          </div>
+          <pre class="font-mono text-xs overflow-y-auto whitespace-pre leading-relaxed select-text pr-10 flex-1"><code>${highlightedHtml}</code></pre>
+        </div>
+
+        <!-- Copy Buttons Row -->
+        <div class="flex flex-wrap gap-2 flex-shrink-0">
+          <button id="panel-copy-negative-btn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-200 shadow-sm">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy Negative Prompt</span>
+          </button>
+          <button id="panel-copy-all-btn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all duration-200 shadow-sm">
+            <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
+            <span>Copy All</span>
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-400 italic flex items-center gap-1.5 px-1.5 flex-shrink-0">
+          <span>💡 Press <strong class="font-semibold text-indigo-500">Esc</strong> to close this panel.</span>
+        </p>
+      </div>
+
+      <!-- Footer -->
+      ${isCopied ? `
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-white dark:bg-slate-950 flex-shrink-0">
+          <button id="panel-reset-checkmark-btn" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-rose-500/10 hover:border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Reset Checkmark</span>
+          </button>
+        </div>
+      ` : ''}
+
+    </div>
+  `;
+
+  // Bind panel events
+  document.getElementById('panel-backdrop').onclick = closePromptPanel;
+  document.getElementById('panel-close-btn').onclick = closePromptPanel;
+
+  // Type tabs
+  document.getElementById('panel-type-chart').onclick = () => {
+    panelAssetType = 'chart';
+    panelClassIndex = 0;
+    renderPromptPanel();
+  };
+  document.getElementById('panel-type-worksheet').onclick = () => {
+    panelAssetType = 'worksheet';
+    panelClassIndex = 0;
+    renderPromptPanel();
+  };
+
+  // Class sub-tabs
+  panelNode.querySelectorAll('.panel-class-tab').forEach(btn => {
+    btn.onclick = () => {
+      panelClassIndex = parseInt(btn.getAttribute('data-class-idx'));
+      renderPromptPanel();
+    };
+  });
+
+  // Filename copy
+  document.getElementById('panel-copy-filename-btn').onclick = () => {
+    const btn = document.getElementById('panel-copy-filename-btn');
+    navigator.clipboard.writeText(promptObj.filename).then(() => {
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Name</span>';
+        lucide.createIcons();
+      }, 1500);
+    });
+  };
+
+  // Copy image prompt (top button)
+  document.getElementById('panel-copy-prompt-btn-top').onclick = () => {
+    navigator.clipboard.writeText(promptObj.image_generation_prompt).then(() => {
+      setTenseCopiedStatus(panelTenseId, panelAssetType, currentClass, true);
+      showToast(`Copied ${panelAssetType.toUpperCase()} prompt for ${currentClass}! 📋✅`);
+      renderPromptPanel();
+    });
+  };
+
+  // Copy negative prompt
+  document.getElementById('panel-copy-negative-btn').onclick = () => {
+    const btn = document.getElementById('panel-copy-negative-btn');
+    navigator.clipboard.writeText(promptObj.negative_prompt).then(() => {
+      showToast('Copied negative prompt! 📋');
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Negative Prompt</span>';
+        lucide.createIcons();
+      }, 1500);
+    });
+  };
+
+  // Copy all
+  document.getElementById('panel-copy-all-btn').onclick = () => {
+    const allText = `IMAGE PROMPT:\n${promptObj.image_generation_prompt}\n\nNEGATIVE PROMPT:\n${promptObj.negative_prompt}`;
+    const btn = document.getElementById('panel-copy-all-btn');
+    navigator.clipboard.writeText(allText).then(() => {
+      setTenseCopiedStatus(panelTenseId, panelAssetType, currentClass, true);
+      showToast('Copied all prompts! 📋✅');
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i><span class="text-emerald-600">Copied!</span>';
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy-plus" class="w-3.5 h-3.5"></i><span>Copy All</span>';
+        lucide.createIcons();
+      }, 1500);
+      renderPromptPanel();
+    });
+  };
+
+  // Reset checkmark
+  const resetBtn = document.getElementById('panel-reset-checkmark-btn');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      setTenseCopiedStatus(panelTenseId, panelAssetType, currentClass, false);
+      showToast('Reset checkmark! 🔄');
+      renderPromptPanel();
+    };
+  }
+
+  // ESC key
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closePromptPanel();
+      window.removeEventListener('keydown', escHandler);
+    }
+  };
+  window.addEventListener('keydown', escHandler);
+
+  lucide.createIcons();
 }
 
 // ============================================================
