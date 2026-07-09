@@ -57,6 +57,13 @@ const CLASS_LEVELS = [
   { id: 'class9-10', label: 'Class 9–10', shortLabel: '9-10', color: 'rose', description: '12 Specific Tenses Mastery' },
 ];
 
+const ASSET_COUNTS = {
+  'class4-5': { charts: 1, worksheets: 1 },
+  'class6': { charts: 3, worksheets: 3 },
+  'class7-8': { charts: 2, worksheets: 2 },
+  'class9-10': { charts: 1, worksheets: 1 }
+};
+
 const TENSE_COLORS = {
   present: {
     gradient: 'from-blue-500 to-cyan-500',
@@ -431,6 +438,8 @@ function renderClassSelector() {
     btn.onclick = () => {
       selectedClassLevel = btn.getAttribute('data-class');
       renderClassSelector();
+      renderQuickNav();
+      renderOverviewStats();
       renderTenseCards();
     };
   });
